@@ -1,0 +1,102 @@
+{
+  "schema": {
+    "email": {
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "Email address required."
+      ],
+      "unique": [
+        true,
+        "Email already exist."
+      ],
+      "match": [
+        "EMAIL",
+        "Please enter a valid email address.."
+      ]
+    },
+    "fname": {
+      "type": "String",
+      "required": [
+        true,
+        "First name required."
+      ],
+      "trim": true,
+      "match": [
+        "ALPHA",
+        "First name can only contain letters and spaces."
+      ],
+      "minLength": [
+        3,
+        "First should be atleast {MINLENGTH} characters."
+      ],
+      "maxLength": [
+        20,
+        "First should be not be more than {MAXLENGTH} characters."
+      ]
+    },
+    "lname": {
+      "type": "String",
+      "required": [
+        true,
+        "Last name required."
+      ],
+      "trim": true,
+      "match": [
+        "ALPHA",
+        "Last name can only contain letters and spaces."
+      ],
+      "minLength": [
+        3,
+        "Last should be atleast {MINLENGTH} characters."
+      ],
+      "maxLength": [
+        20,
+        "Last should be not be more than {MAXLENGTH} characters."
+      ]
+    },
+    "password": {
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "Password required."
+      ],
+      "minlength": [
+        8,
+        "Password must be at least {MINLENGTH} characters long."
+      ],
+      "maxlength": [
+        30,
+        "Password cannot be more than {MAXLENGTH} characters long."
+      ],
+      "match": [
+        "PASSWORD",
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number, and one symbol"
+      ]
+    },
+    "createdAt": {
+      "type": "Date",
+      "default": "DATENOW"
+    },
+    "updatedAt": {
+      "type": "Date",
+      "default": "DATENOW"
+    },
+    "lastActive": {
+      "type": "Date",
+      "default": "DATENOW"
+    },
+    "passwordExpired": {
+      "type": "Date",
+      "default": "DATEAFTER",
+      "MILISEC": 604800000
+    }
+  },
+  "list": {
+    "fname": 1,
+    "lname": 1,
+    "email": 1
+  }
+}

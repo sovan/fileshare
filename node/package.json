@@ -1,0 +1,28 @@
+{
+  "name": "mern",
+  "version": "1.0.0",
+  "description": "lab test",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "npm run test",
+    "dev": "node --watch src/app.js"
+  },
+  "author": "Sovan",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mongodb": "^7.7.0",
+    "mongoose": "^9.10.3",
+    "mongoose-unique-validator": "^6.1.1"
+  },
+  "imports": {
+    "#schema/*": "./src/schema/*",
+    "#model/*": "./src/model/*",
+    "#controller/*": "./src/controller/*"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "schema": {
+    "email": {
+      "name": "Email ID",
+      "inputType": "text",
+      "placeHolder": "Enter your email",
+      "operation": [
+        "add",
+        "view",
+        "update"
+      ],
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "Email address required."
+      ],
+      "unique": [
+        true,
+        "Email already exist."
+      ],
+      "match": [
+        "EMAIL",
+        "Please enter a valid email address."
+      ]
+    },
+    "fname": {
+      "name": "First name",
+      "inputType": "text",
+      "placeHolder": "Enter your first name",
+      "operation": [
+        "add",
+        "view",
+        "update"
+      ],
+      "type": "String",
+      "required": [
+        true,
+        "First name required."
+      ],
+      "trim": true,
+      "match": [
+        "ALPHA",
+        "First name can only contain letters and spaces."
+      ],
+      "minLength": [
+        3,
+        "First should be atleast {MINLENGTH} characters."
+      ],
+      "maxLength": [
+        20,
+        "First should be not be more than {MAXLENGTH} characters."
+      ]
+    },
+    "lname": {
+      "name": "Last name",
+      "inputType": "text",
+      "placeHolder": "Enter your last name",
+      "operation": [
+        "add",
+        "view",
+        "update"
+      ],
+      "type": "String",
+      "required": [
+        true,
+        "Last name required."
+      ],
+      "trim": true,
+      "match": [
+        "ALPHA",
+        "Last name can only contain letters and spaces."
+      ],
+      "minLength": [
+        3,
+        "Last should be atleast {minLength} characters."
+      ],
+      "maxLength": [
+        20,
+        "Last should be not be more than {MAXLENGTH} characters."
+      ]
+    },
+    "password": {
+      "placeHolder": "Enter a password",
+      "name": "Password",
+      "inputType": "password",
+      "operation": [
+        "add"
+      ],
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "Password required."
+      ],
+      "minLength": [
+        8,
+        "Password must be at least {MINLENGTH} characters long."
+      ],
+      "maxLength": [
+        30,
+        "Password cannot be more than {MAXLENGTH} characters long."
+      ],
+      "match": [
+        "PASSWORD",
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number, and one symbol"
+      ]
+    },
+    "createdAt": {
+      "placeHolder": "Enter a password",
+      "name": "Created date",
+      "operation": [
+        "view"
+      ],
+      "type": "Date",
+      "default": "DATENOW"
+    },
+    "updatedAt": {
+      "name": "Updated date",
+      "type": "Date",
+      "default": "DATENOW"
+    },
+    "passwordExpired": {
+      "name": "Password expired date",
+      "type": "Date",
+      "default": "DATEAFTER",
+      "MILISEC": 604800000
+    },
+    "tokenExpire": {
+      "name": "Token expired date",
+      "type": "String",
+      "default": "DATEAFTER",
+      "MILISEC": 604800000
+    },
+    "lastActive": {
+      "name": "Last activated date",
+      "type": "Date"
+    },
+    "authToken": {
+      "name": "Authorization token",
+      "type": "String"
+    }
+  },
+  "pages": {
+    "list": {
+      "fname": 1,
+      "lname": 1,
+      "email": 1
+    },
+    "view": {
+      "fname": 1,
+      "lname": 1,
+      "email": 1,
+      "createdAt": 1,
+      "updatedAt": 1,
+      "_id": 0
+    },
+    "login": [
+      "authToken",
+      "lastActive"
+    ]
+  }
+}
