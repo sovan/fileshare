@@ -1,8 +1,24 @@
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
 
-export const ViewModal = ({ show, setShow, viewRecord }) => {
-  const viewRecordKey = Object.keys(viewRecord);
+type ViewModalProps = {
+  show: boolean;
+  setShow: (show: boolean) => void;
+  viewRecord: unknown;
+};
+
+const formatValue = (value: unknown): string | number => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number") return value;
+  return JSON.stringify(value) ?? "";
+};
+
+export const ViewModal = ({ show, setShow, viewRecord }: ViewModalProps) => {
+  const record =
+    viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
+      ? (viewRecord as Record<string, unknown>)
+      : {};
+
   return (
     <Modal show={show} onHide={() => setShow(false)}>
       <Modal.Header closeButton>
@@ -11,10 +27,10 @@ export const ViewModal = ({ show, setShow, viewRecord }) => {
       <Modal.Body>
         <Table striped bordered hover size="sm">
           <tbody>
-            {viewRecordKey.map((eachRow) => (
-              <tr>
-                <td>{eachRow}</td>
-                <td>{viewRecord[eachRow]}</td>
+            {Object.entries(record).map(([key, value]) => (
+              <tr key={key}>
+                <td>{key}</td>
+                <td>{formatValue(value)}</td>
               </tr>
             ))}
           </tbody>

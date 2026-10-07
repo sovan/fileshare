@@ -6,7 +6,19 @@ import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
 import { EditModal } from "./editModal";
 
-export const TableOperation = ({ id, onDelete, onView, viewRecord }) => {
+type TableOperationProps = {
+  id: string;
+  onDelete: (id: string) => unknown;
+  onView: (id: string) => unknown;
+  viewRecord: unknown;
+};
+
+export const TableOperation = ({
+  id,
+  onDelete,
+  onView,
+  viewRecord,
+}: TableOperationProps) => {
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
   const [showEdit, setShowEdit] = useState(false);

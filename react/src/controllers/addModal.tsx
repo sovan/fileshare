@@ -1,71 +1,106 @@
 import { Button, Modal, Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldError } from "react-hook-form";
 
-export const AddModal = ({ show, setShow, schema, onSubmit, serverError }) => {
-  const schemaKeys = Object.keys(schema);
+type SchemaField = {
+  name?: string;
+  inputType?: string;
+  placeHolder?: string;
+  operation?: string[];
+  required?: [boolean, string];
+  match?: [string, string];
+  minLength?: [number, string];
+  maxLength?: [number, string];
+};
+
+type AddModalProps = {
+  show: boolean;
+  setShow: (show: boolean) => void;
+  schema: unknown;
+  onSubmit: (payload: object) => unknown;
+  serverError: unknown;
+};
+
+export const AddModal = ({
+  show,
+  setShow,
+  schema,
+  onSubmit,
+  serverError,
+}: AddModalProps) => {
+  const schemaFields =
+    schema && typeof schema === "object"
+      ? (schema as Record<string, SchemaField>)
+      : {};
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<Record<string, string>>();
 
-  const getPattern = (key) => {
+  const getPattern = (key: string | undefined): RegExp => {
     switch (key) {
       case "EMAIL":
-        return /\S+@\S+\.\S+/;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       case "ALPHA":
         return /^[a-zA-Z\s]+$/;
       case "PASSWORD":
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       default:
-        return "";
+        return /(?:)/;
     }
   };
 
-  const createInputBox = (schema, errors, key, serverError) => {
+  const createInputBox = (
+    field: SchemaField,
+    fieldError: FieldError | undefined,
+    key: string,
+    fieldServerError: unknown,
+  ) => {
     return (
       <Form.Group
         key={key}
         className="mb-3"
         controlId="exampleForm.ControlInput1"
       >
-        <Form.Label>{schema?.name}</Form.Label>
+        <Form.Label>{field.name}</Form.Label>
 
-        {(schema?.inputType === "text" || schema?.inputType === "password") && (
+        {(field.inputType === "text" || field.inputType === "password") && (
           <Form.Control
-            placeholder={schema?.placeHolder}
-            type={schema?.inputType}
+            placeholder={field.placeHolder}
+            type={field.inputType}
             {...register(key, {
-              required: schema?.required?.[1] || undefined,
-              pattern: schema?.match
+              required: field.required?.[1] || undefined,
+              pattern: {
+                value: getPattern(field?.match?.[0]),
+                message: field?.match?.[1] || "",
+              },
+              minLength: field.minLength
                 ? {
-                    value: getPattern(schema?.match?.[0]),
-                    message: schema?.match?.[1] || undefined,
-                  }
-                : undefined,
-              minLength: schema?.minLength
-                ? {
-                    value: schema?.minLength?.[0],
-                    message: schema?.minLength?.[1].replace(
+                    value: field.minLength[0],
+                    message: field.minLength[1].replace(
                       "{MINLENGTH}",
-                      schema?.minLength?.[0],
+                      String(field.minLength[0]),
                     ),
                   }
                 : undefined,
-              maxLength: schema?.maxLength
+              maxLength: field.maxLength
                 ? {
-                    value: schema?.maxLength?.[0],
-                    message: schema?.maxLength?.[1].replace(
+                    value: field.maxLength[0],
+                    message: field.maxLength[1].replace(
                       "{MAXLENGTH}",
-                      schema?.maxLength?.[0],
+                      String(field.maxLength[0]),
                     ),
                   }
                 : undefined,
             })}
           />
         )}
-        {errors && <p style={{ color: "red" }}>{errors?.message}</p>}
-        {serverError && <p style={{ color: "red" }}>{serverError}</p>}
+        {typeof fieldError?.message === "string" && (
+          <p style={{ color: "red" }}>{fieldError.message}</p>
+        )}
+        {typeof fieldServerError === "string" && (
+          <p style={{ color: "red" }}>{fieldServerError}</p>
+        )}
       </Form.Group>
     );
   };
@@ -77,15 +112,17 @@ export const AddModal = ({ show, setShow, schema, onSubmit, serverError }) => {
           <Modal.Title>Add a user</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {schemaKeys.map((key) => {
-            {
-              const eachSchema = schema[key];
-              const eachError = errors[key];
-              return eachSchema?.operation &&
-                eachSchema?.operation.includes("add")
-                ? createInputBox(eachSchema, eachError, key, serverError?.[key])
-                : null;
-            }
+          {Object.entries(schemaFields).map(([key, field]) => {
+            const fieldServerError =
+              typeof serverError === "object" &&
+              serverError !== null &&
+              key in serverError
+                ? (serverError as Record<string, unknown>)[key]
+                : undefined;
+
+            return field.operation?.includes("add")
+              ? createInputBox(field, errors[key], key, fieldServerError)
+              : null;
           })}
         </Modal.Body>
         <Modal.Footer>

@@ -1,6 +1,18 @@
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 
-export const DeleteModal = ({ show, setShow, id, onDelete }) => {
+type DeleteModalProps = {
+  show: boolean;
+  setShow: (show: boolean) => void;
+  id: string;
+  onDelete: (id: string) => unknown;
+};
+
+export const DeleteModal = ({
+  show,
+  setShow,
+  id,
+  onDelete,
+}: DeleteModalProps) => {
   return (
     <Modal show={show} onHide={() => setShow(false)}>
       <Modal.Header closeButton>

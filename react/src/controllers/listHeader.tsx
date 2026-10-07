@@ -2,7 +2,19 @@ import { Row, Col, Button } from "react-bootstrap";
 import { useState } from "react";
 import { AddModal } from "./addModal";
 
-export const ListHeader = ({ getSchema, schema, onSubmit, serverError }) => {
+type ListHeaderProps = {
+  getSchema: () => void;
+  schema: unknown;
+  onSubmit: (payload: object) => void;
+  serverError: unknown;
+};
+
+export const ListHeader = ({
+  getSchema,
+  schema,
+  onSubmit,
+  serverError,
+}: ListHeaderProps) => {
   const [show, setShow] = useState(false);
   return (
     <Row>
@@ -13,7 +25,8 @@ export const ListHeader = ({ getSchema, schema, onSubmit, serverError }) => {
         <Button
           variant="primary"
           onClick={() => {
-            (setShow(true), getSchema());
+            setShow(true);
+            getSchema();
           }}
         >
           Add user

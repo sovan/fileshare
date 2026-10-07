@@ -1,4 +1,4 @@
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 export const EditModal = ({ show, setShow }) => {
   return (
     <Modal show={show} onHide={() => setShow(false)}>
