@@ -7,37 +7,59 @@ import { Loading } from "../controllers/loading";
 export const List = () => {
   const {
     fetchData,
-    records,
     getSchema,
-    schema,
     insertData,
-    serverError,
     onDelete,
-    viewRecord,
     onView,
+    setShowDelete,
+    setShowView,
+    setShowEdit,
+    setShowAdd,
+    insertingData,
+    deletingData,
+    viewingData,
+    records,
+    schema,
+    viewRecord,
     loadingList,
+    showView,
+    showDelete,
+    showEdit,
+    showAdd,
+    serverError,
   } = useAPI();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    void fetchData();
+  }, [fetchData]);
 
   return (
     <>
       <ListHeader
         getSchema={getSchema}
-        schema={schema}
         onSubmit={insertData}
+        setShowAdd={setShowAdd}
+        insertingData={insertingData}
         serverError={serverError}
+        schema={schema}
+        showAdd={showAdd}
       />
       {loadingList ? (
         <Loading />
       ) : (
         <TableView
-          records={records}
           onDelete={onDelete}
           onView={onView}
+          setShowDelete={setShowDelete}
+          setShowView={setShowView}
+          setShowEdit={setShowEdit}
+          deletingData={deletingData}
+          viewingData={viewingData}
           viewRecord={viewRecord}
+          records={records}
+          showView={showView}
+          showEdit={showEdit}
+          showDelete={showDelete}
         />
       )}
     </>

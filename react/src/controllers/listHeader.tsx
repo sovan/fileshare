@@ -1,21 +1,25 @@
 import { Row, Col, Button } from "react-bootstrap";
-import { useState } from "react";
 import { AddModal } from "./addModal";
 
 type ListHeaderProps = {
   getSchema: () => void;
-  schema: unknown;
   onSubmit: (payload: object) => void;
+  setShowAdd: (show: boolean) => void;
+  schema: unknown;
   serverError: unknown;
+  showAdd: boolean;
+  insertingData: boolean;
 };
 
 export const ListHeader = ({
   getSchema,
-  schema,
   onSubmit,
+  setShowAdd,
+  schema,
   serverError,
+  showAdd,
+  insertingData,
 }: ListHeaderProps) => {
-  const [show, setShow] = useState(false);
   return (
     <Row>
       <Col>
@@ -25,7 +29,7 @@ export const ListHeader = ({
         <Button
           variant="primary"
           onClick={() => {
-            setShow(true);
+            setShowAdd(true);
             getSchema();
           }}
         >
@@ -33,11 +37,12 @@ export const ListHeader = ({
         </Button>
       </Col>
       <AddModal
-        show={show}
-        setShow={setShow}
-        schema={schema}
+        setShow={setShowAdd}
         onSubmit={onSubmit}
+        show={showAdd}
+        schema={schema}
         serverError={serverError}
+        disabled={insertingData}
       />
     </Row>
   );

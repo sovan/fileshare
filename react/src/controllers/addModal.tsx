@@ -13,19 +13,21 @@ type SchemaField = {
 };
 
 type AddModalProps = {
-  show: boolean;
   setShow: (show: boolean) => void;
-  schema: unknown;
   onSubmit: (payload: object) => unknown;
+  show: boolean;
+  schema: unknown;
   serverError: unknown;
+  disabled: boolean;
 };
 
 export const AddModal = ({
-  show,
   setShow,
-  schema,
   onSubmit,
+  show,
+  schema,
   serverError,
+  disabled,
 }: AddModalProps) => {
   const schemaFields =
     schema && typeof schema === "object"
@@ -40,13 +42,13 @@ export const AddModal = ({
   const getPattern = (key: string | undefined): RegExp => {
     switch (key) {
       case "EMAIL":
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return /^[^\s@]+@[^.\s@]+(?:\.[^.\s@]+)+$/;
       case "ALPHA":
         return /^[a-zA-Z\s]+$/;
       case "PASSWORD":
         return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       default:
-        return /(?:)/;
+        return /.*/;
     }
   };
 
@@ -108,7 +110,7 @@ export const AddModal = ({
   return (
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
       <Form onSubmit={handleSubmit(onSubmit)}>
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title>Add a user</Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -126,10 +128,16 @@ export const AddModal = ({
           })}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShow(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShow(false)}
+            disabled={disabled}
+          >
             Close
           </Button>
-          <Button type="submit">Save Changes</Button>
+          <Button type="submit" disabled={disabled}>
+            Save Changes
+          </Button>
         </Modal.Footer>
       </Form>
     </Modal>

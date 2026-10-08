@@ -1,10 +1,12 @@
 import { Button, Modal } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
+import { Loading } from "./loading";
 
 type ViewModalProps = {
   show: boolean;
   setShow: (show: boolean) => void;
   viewRecord: unknown;
+  viewingData: boolean;
 };
 
 const formatValue = (value: unknown): string | number => {
@@ -13,7 +15,12 @@ const formatValue = (value: unknown): string | number => {
   return JSON.stringify(value) ?? "";
 };
 
-export const ViewModal = ({ show, setShow, viewRecord }: ViewModalProps) => {
+export const ViewModal = ({
+  show,
+  setShow,
+  viewRecord,
+  viewingData,
+}: ViewModalProps) => {
   const record =
     viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
       ? (viewRecord as Record<string, unknown>)
@@ -25,16 +32,20 @@ export const ViewModal = ({ show, setShow, viewRecord }: ViewModalProps) => {
         <Modal.Title>View user</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Table striped bordered hover size="sm">
-          <tbody>
-            {Object.entries(record).map(([key, value]) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>{formatValue(value)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        {viewingData ? (
+          <Loading />
+        ) : (
+          <Table striped bordered hover size="sm">
+            <tbody>
+              {Object.entries(record).map(([key, value]) => (
+                <tr key={key}>
+                  <td>{key}</td>
+                  <td>{formatValue(value)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={() => setShow(false)}>
