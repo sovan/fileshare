@@ -17,7 +17,6 @@ const useAPI = () => {
   const [viewRecord, setViewRecord] = useState([]);
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [loadingList, setLoadingList] = useState(false);
   const [insertingData, setInsertingData] = useState(false);
@@ -114,6 +113,8 @@ const useAPI = () => {
     }
   };
 
+  const clearViewRecord = () => setViewRecord([]);
+
   return {
     getSchema,
     fetchData,
@@ -122,8 +123,8 @@ const useAPI = () => {
     onDelete,
     setShowDelete,
     setShowView,
-    setShowEdit,
     setShowAdd,
+    clearViewRecord,
     alerts,
     insertingData,
     deletingData,
@@ -135,7 +136,6 @@ const useAPI = () => {
     loadingList,
     showDelete,
     showView,
-    showEdit,
     showAdd,
   };
 };

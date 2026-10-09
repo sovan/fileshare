@@ -14,8 +14,8 @@ export const List = () => {
     onView,
     setShowDelete,
     setShowView,
-    setShowEdit,
     setShowAdd,
+    clearViewRecord,
     alerts,
     insertingData,
     deletingData,
@@ -26,7 +26,6 @@ export const List = () => {
     loadingList,
     showView,
     showDelete,
-    showEdit,
     showAdd,
     serverError,
   } = useAPI();
@@ -46,6 +45,8 @@ export const List = () => {
         serverError={serverError}
         schema={schema}
         showAdd={showAdd}
+        viewRecord={viewRecord}
+        clearViewRecord={clearViewRecord}
       />
       {loadingList ? (
         <Loading />
@@ -55,13 +56,13 @@ export const List = () => {
           onView={onView}
           setShowDelete={setShowDelete}
           setShowView={setShowView}
-          setShowEdit={setShowEdit}
+          setShowAdd={setShowAdd}
+          getSchema={getSchema}
           deletingData={deletingData}
           viewingData={viewingData}
           viewRecord={viewRecord}
           records={records}
           showView={showView}
-          showEdit={showEdit}
           showDelete={showDelete}
         />
       )}

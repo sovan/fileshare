@@ -2,7 +2,6 @@ import Table from "react-bootstrap/Table";
 import TableOperation from "./tableOperation";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
-import { EditModal } from "./editModal";
 import { useState } from "react";
 
 type TableRecord = {
@@ -13,31 +12,31 @@ type TableRecord = {
 };
 
 type TableViewProps = {
-  records?: TableRecord[];
   onDelete: (id: string) => void;
   onView: (id: string) => void;
-  viewRecord: unknown;
-  showDelete: boolean;
   setShowDelete: (show: boolean) => void;
-  showView: boolean;
   setShowView: (show: boolean) => void;
-  showEdit: boolean;
-  setShowEdit: (show: boolean) => void;
+  getSchema: () => void;
+  setShowAdd: (show: boolean) => void;
+  viewRecord: unknown;
+  showView: boolean;
   deletingData: boolean;
   viewingData: boolean;
+  showDelete: boolean;
+  records?: TableRecord[];
 };
 
 export const TableView = ({
-  records = [],
   onDelete,
   onView,
+  getSchema,
+  setShowDelete,
+  setShowView,
+  setShowAdd,
+  records = [],
   viewRecord,
   showDelete,
-  setShowDelete,
   showView,
-  setShowView,
-  showEdit,
-  setShowEdit,
   deletingData,
   viewingData,
 }: TableViewProps) => {
@@ -69,7 +68,12 @@ export const TableView = ({
                   onView(eachRecord._id);
                   setShowView(true);
                 }}
-                setShowEdit={setShowEdit}
+                onEditClick={() => {
+                  setShowAdd(true);
+                  getSchema();
+                  onView(eachRecord._id);
+                  setSelectedRecordId(eachRecord._id);
+                }}
               />
             </tr>
           ))}
@@ -93,7 +97,6 @@ export const TableView = ({
         viewRecord={viewRecord}
         viewingData={viewingData}
       />
-      <EditModal show={showEdit} setShow={setShowEdit} />
     </>
   );
 };

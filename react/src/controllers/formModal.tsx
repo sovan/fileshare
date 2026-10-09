@@ -1,4 +1,5 @@
 import { Button, Modal, Form } from "react-bootstrap";
+import { useEffect } from "react";
 import { useForm, type FieldError } from "react-hook-form";
 
 type SchemaField = {
@@ -12,23 +13,33 @@ type SchemaField = {
   maxLength?: [number, string];
 };
 
-type AddModalProps = {
+type FormModalProps = {
   setShow: (show: boolean) => void;
   onSubmit: (payload: object) => unknown;
   show: boolean;
   schema: unknown;
   serverError: unknown;
   disabled: boolean;
+  viewRecord: unknown;
 };
 
-export const AddModal = ({
+const toFormValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  return JSON.stringify(value) ?? "";
+};
+
+export const FormModal = ({
   setShow,
   onSubmit,
   show,
   schema,
   serverError,
   disabled,
-}: AddModalProps) => {
+  viewRecord,
+}: FormModalProps) => {
   const schemaFields =
     schema && typeof schema === "object"
       ? (schema as Record<string, SchemaField>)
@@ -36,8 +47,20 @@ export const AddModal = ({
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<Record<string, string>>();
+
+  useEffect(() => {
+    const record =
+      viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
+        ? (viewRecord as Record<string, unknown>)
+        : {};
+    const values = Object.fromEntries(
+      Object.entries(record).map(([key, value]) => [key, toFormValue(value)]),
+    );
+    reset(values);
+  }, [reset, viewRecord]);
 
   const getPattern = (key: string | undefined): RegExp => {
     switch (key) {
@@ -144,4 +167,4 @@ export const AddModal = ({
   );
 };
 
-export default AddModal;
+export default FormModal;

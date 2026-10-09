@@ -1,5 +1,5 @@
 import { Row, Col, Button } from "react-bootstrap";
-import { AddModal } from "./addModal";
+import { FormModal } from "./formModal";
 
 type ListHeaderProps = {
   getSchema: () => void;
@@ -9,6 +9,8 @@ type ListHeaderProps = {
   serverError: unknown;
   showAdd: boolean;
   insertingData: boolean;
+  viewRecord: unknown;
+  clearViewRecord: () => void;
 };
 
 export const ListHeader = ({
@@ -19,6 +21,8 @@ export const ListHeader = ({
   serverError,
   showAdd,
   insertingData,
+  viewRecord,
+  clearViewRecord,
 }: ListHeaderProps) => {
   return (
     <Row>
@@ -29,6 +33,7 @@ export const ListHeader = ({
         <Button
           variant="primary"
           onClick={() => {
+            clearViewRecord();
             setShowAdd(true);
             getSchema();
           }}
@@ -36,13 +41,14 @@ export const ListHeader = ({
           Add user
         </Button>
       </Col>
-      <AddModal
+      <FormModal
         setShow={setShowAdd}
         onSubmit={onSubmit}
         show={showAdd}
         schema={schema}
         serverError={serverError}
         disabled={insertingData}
+        viewRecord={viewRecord}
       />
     </Row>
   );

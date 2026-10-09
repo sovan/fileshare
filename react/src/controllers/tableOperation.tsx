@@ -5,13 +5,13 @@ import { CgEyeAlt } from "react-icons/cg";
 type TableOperationProps = {
   onDeleteClick: () => void;
   onViewClick: () => void;
-  setShowEdit: (show: boolean) => void;
+  onEditClick: () => void;
 };
 
 export const TableOperation = ({
   onDeleteClick,
   onViewClick,
-  setShowEdit,
+  onEditClick,
 }: TableOperationProps) => {
   return (
     <td style={{ width: "150px" }}>
@@ -27,7 +27,7 @@ export const TableOperation = ({
         variant="outline-danger"
         aria-label="Edit item"
         className="me-2"
-        onClick={() => setShowEdit(true)}
+        onClick={onEditClick}
       >
         <BiPencil />
       </Button>
