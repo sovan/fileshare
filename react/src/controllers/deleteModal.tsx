@@ -14,7 +14,7 @@ export const DeleteModal = ({
   deletingData,
 }: DeleteModalProps) => {
   return (
-    <Modal show={show} onHide={() => setShow(false)}>
+    <Modal show={show}>
       <Modal.Header>
         <Modal.Title>Delete user</Modal.Title>
       </Modal.Header>

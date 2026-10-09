@@ -2,6 +2,13 @@ import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const HOSTNAME = "http://localhost:3000/";
+
+export type LocalAlert = {
+  id: number;
+  message: string;
+  type: string;
+};
+
 const useAPI = () => {
   const param = useParams();
   const [records, setRecords] = useState([]);
@@ -16,6 +23,16 @@ const useAPI = () => {
   const [insertingData, setInsertingData] = useState(false);
   const [deletingData, setDeletingData] = useState(false);
   const [viewingData, setViewingData] = useState(false);
+  const [alerts, setAlerts] = useState<LocalAlert[]>([]);
+
+  const createAlert = (type: string, err: unknown) => {
+    const id = Date.now();
+    const message = err instanceof Error ? err.message : String(err);
+    setAlerts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+    }, 3000);
+  };
 
   const fetchData = useCallback(async () => {
     setLoadingList(true);
@@ -23,7 +40,7 @@ const useAPI = () => {
       const response = await fetch(HOSTNAME + param.one + "/list");
       setRecords(await response.json());
     } catch (err) {
-      console.log(err);
+      createAlert("danger", err);
     } finally {
       setLoadingList(false);
     }
@@ -43,10 +60,11 @@ const useAPI = () => {
       if (response?.status === 400) setServerError(res);
       else {
         setShowAdd(false);
+        createAlert("success", "Record inserted successfully");
         await fetchData();
       }
     } catch (err) {
-      console.log(err);
+      createAlert("danger", err);
     } finally {
       setInsertingData(false);
     }
@@ -58,7 +76,7 @@ const useAPI = () => {
       const response = await fetch(HOSTNAME + param.one + "/schema");
       setSchema(await response.json());
     } catch (err) {
-      console.log(err);
+      createAlert("danger", err);
     }
   };
 
@@ -72,10 +90,11 @@ const useAPI = () => {
       if (response?.status === 400) setServerError(res);
       else {
         setShowDelete(false);
+        createAlert("success", "Record deleted successfully");
         await fetchData();
       }
     } catch (err) {
-      console.log(err);
+      createAlert("danger", err);
     } finally {
       setDeletingData(false);
     }
@@ -89,7 +108,7 @@ const useAPI = () => {
       const res = await response.json();
       setViewRecord(res);
     } catch (err) {
-      console.log(err);
+      createAlert("danger", err);
     } finally {
       setViewingData(false);
     }
@@ -105,6 +124,7 @@ const useAPI = () => {
     setShowView,
     setShowEdit,
     setShowAdd,
+    alerts,
     insertingData,
     deletingData,
     viewingData,

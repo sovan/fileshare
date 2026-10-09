@@ -3,6 +3,7 @@ import TableView from "../controllers/tableView";
 import { useEffect } from "react";
 import useAPI from "../hooks/useAPI";
 import { Loading } from "../controllers/loading";
+import { AlertPopup } from "../controllers/alertPopup";
 
 export const List = () => {
   const {
@@ -15,6 +16,7 @@ export const List = () => {
     setShowView,
     setShowEdit,
     setShowAdd,
+    alerts,
     insertingData,
     deletingData,
     viewingData,
@@ -35,6 +37,7 @@ export const List = () => {
 
   return (
     <>
+      {AlertPopup(alerts)}
       <ListHeader
         getSchema={getSchema}
         onSubmit={insertData}

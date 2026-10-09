@@ -27,8 +27,8 @@ export const ViewModal = ({
       : {};
 
   return (
-    <Modal show={show} onHide={() => setShow(false)}>
-      <Modal.Header closeButton>
+    <Modal show={show}>
+      <Modal.Header>
         <Modal.Title>View user</Modal.Title>
       </Modal.Header>
       <Modal.Body>

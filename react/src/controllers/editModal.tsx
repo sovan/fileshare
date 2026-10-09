@@ -1,8 +1,8 @@
 import { Button, Modal } from "react-bootstrap";
 export const EditModal = ({ show, setShow }) => {
   return (
-    <Modal show={show} onHide={() => setShow(false)}>
-      <Modal.Header closeButton>
+    <Modal show={show}>
+      <Modal.Header>
         <Modal.Title>Edit user</Modal.Title>
       </Modal.Header>
       <Modal.Body>Edit</Modal.Body>
