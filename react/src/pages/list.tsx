@@ -35,13 +35,13 @@ export const List = () => {
 
   useEffect(() => {
     void fetchData();
-  }, [fetchData]);
+    void getSchema();
+  }, [fetchData, getSchema]);
 
   return (
     <>
       {AlertPopup(alerts)}
       <ListHeader
-        getSchema={getSchema}
         onSubmit={insertData}
         setShowAdd={setShowAdd}
         insertingData={insertingData}
@@ -55,13 +55,13 @@ export const List = () => {
         <Loading />
       ) : (
         <TableView
+          schema={schema}
           onDelete={onDelete}
           onView={onView}
           onEdit={onEdit}
           setShowDelete={setShowDelete}
           setShowView={setShowView}
           setShowAdd={setShowAdd}
-          getSchema={getSchema}
           setSelectedRecordId={setSelectedRecordId}
           deletingData={deletingData}
           viewingData={viewingData}

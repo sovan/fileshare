@@ -2,7 +2,6 @@ import { Row, Col, Button } from "react-bootstrap";
 import { FormModal } from "./formModal";
 
 type ListHeaderProps = {
-  getSchema: () => void;
   onSubmit: (payload: Record<string, unknown>) => void;
   setShowAdd: (show: boolean) => void;
   schema: unknown;
@@ -14,7 +13,6 @@ type ListHeaderProps = {
 };
 
 export const ListHeader = ({
-  getSchema,
   onSubmit,
   setShowAdd,
   schema,
@@ -35,7 +33,6 @@ export const ListHeader = ({
           onClick={() => {
             clearViewRecord();
             setShowAdd(true);
-            getSchema();
           }}
         >
           Add user

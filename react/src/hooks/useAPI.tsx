@@ -97,7 +97,7 @@ const useAPI = () => {
     }
   };
 
-  const getSchema = async () => {
+  const getSchema = useCallback(async () => {
     setServerError(undefined);
     try {
       const response = await fetch(HOSTNAME + param.one + "/schema");
@@ -105,7 +105,7 @@ const useAPI = () => {
     } catch (err) {
       createAlert("danger", err);
     }
-  };
+  }, [param.one]);
 
   const onDelete = async (id: string) => {
     setDeletingData(true);

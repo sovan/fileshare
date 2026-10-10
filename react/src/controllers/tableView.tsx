@@ -4,10 +4,16 @@ import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
 
 type TableRecord = {
+  [key: string]: unknown;
   _id: string;
   fname: string;
   lname: string;
   email: string;
+};
+
+type SchemaField = {
+  name?: string;
+  operation?: string[];
 };
 
 type TableViewProps = {
@@ -16,7 +22,6 @@ type TableViewProps = {
   onEdit: (id: string) => void;
   setShowDelete: (show: boolean) => void;
   setShowView: (show: boolean) => void;
-  getSchema: () => void;
   setShowAdd: (show: boolean) => void;
   setSelectedRecordId: (id: string) => void;
 
@@ -27,13 +32,20 @@ type TableViewProps = {
   showDelete: boolean;
   records?: TableRecord[];
   selectedRecordId?: string;
+  schema: unknown;
+};
+
+const formatCellValue = (value: unknown): string | number => {
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (value === null || value === undefined) return "";
+  if (typeof value === "boolean") return String(value);
+  return JSON.stringify(value) ?? "";
 };
 
 export const TableView = ({
   onDelete,
   onView,
   onEdit,
-  getSchema,
   setShowDelete,
   setShowView,
   setShowAdd,
@@ -45,24 +57,34 @@ export const TableView = ({
   deletingData,
   viewingData,
   selectedRecordId,
+  schema,
 }: TableViewProps) => {
+  const schemaFields =
+    schema && typeof schema === "object" && !Array.isArray(schema)
+      ? (schema as Record<string, SchemaField>)
+      : {};
+  const headers = Object.entries(schemaFields)
+    .filter(([, field]) => field.operation?.includes("list"))
+    .map(([key, field]) => <th key={key}>{field.name ?? key}</th>);
+
+  const body = (eachRecord: TableRecord) =>
+    Object.entries(schemaFields)
+      .filter(([, field]) => field.operation?.includes("list"))
+      .map(([key]) => <td key={key}>{formatCellValue(eachRecord[key])}</td>);
+
   return (
     <>
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
+            {headers}
             <th>Operation</th>
           </tr>
         </thead>
         <tbody>
           {records.map((eachRecord) => (
             <tr key={eachRecord?._id}>
-              <td>{eachRecord?.fname}</td>
-              <td>{eachRecord?.lname}</td>
-              <td>{eachRecord?.email}</td>
+              {body(eachRecord)}
               <TableOperation
                 onDeleteClick={() => {
                   setSelectedRecordId(eachRecord._id);
@@ -74,7 +96,6 @@ export const TableView = ({
                 }}
                 onEditClick={() => {
                   setShowAdd(true);
-                  getSchema();
                   onEdit(eachRecord._id);
                   setSelectedRecordId(eachRecord._id);
                 }}
@@ -83,7 +104,6 @@ export const TableView = ({
           ))}
         </tbody>
       </Table>
-
       <DeleteModal
         show={showDelete}
         setShow={setShowDelete}

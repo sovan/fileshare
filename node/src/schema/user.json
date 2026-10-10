@@ -7,7 +7,8 @@
       "operation": [
         "add",
         "view",
-        "update"
+        "update",
+        "list"
       ],
       "type": "String",
       "trim": true,
@@ -31,7 +32,8 @@
       "operation": [
         "add",
         "view",
-        "update"
+        "update",
+        "list"
       ],
       "type": "String",
       "required": [
@@ -59,7 +61,8 @@
       "operation": [
         "add",
         "view",
-        "update"
+        "update",
+        "list"
       ],
       "type": "String",
       "required": [
