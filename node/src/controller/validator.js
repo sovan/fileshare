@@ -1,60 +1,85 @@
-import fs from "fs";
+import fs from "node:fs";
 
-export const validatorExtract = (error, schema) => {
-  const keys = Object.keys(error?.errors);
+export const validatorExtract = (error, schema = {}) => {
+  const validationErrors = error.errors;
+
   const errors = {};
-  for (const key of keys) {
-    if (error?.errors[key]?.message === "NOTUNIQUE") {
-      errors[key] = schema[key]?.unique[1];
+  for (const [key, validationError] of Object.entries(validationErrors)) {
+    if (validationError?.message === "NOTUNIQUE") {
+      errors[key] = schema[key]?.unique?.[1] ?? "This value already exists.";
     } else {
-      errors[key] = error?.errors[key]?.message;
+      errors[key] = validationError?.message ?? String(validationError);
     }
   }
-  return errors;
+
+  if (error?.code === 11000) {
+    const duplicateFields =
+      error.keyValue && typeof error.keyValue === "object"
+        ? Object.keys(error.keyValue)
+        : Object.keys(error.keyPattern ?? {});
+    for (const key of duplicateFields) {
+      errors[key] = schema[key]?.unique?.[1] ?? "This value already exists.";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) return errors;
+
+  return {
+    error: "Unable to process the request.",
+  };
 };
 
 export const createSchemaFromTextFile = (collection) => {
+  let data;
   try {
-    const data = fs.readFileSync("src/schema/" + collection + ".json", "utf8");
-    let dataObject = JSON.parse(data);
-    let schema = dataObject?.schema;
-    let pages = dataObject?.pages;
-    let keys = Object.keys(schema);
-    for (const key of keys) {
-      if (schema[key]?.match?.[0] !== undefined) {
-        switch (schema[key]?.match?.[0]) {
-          case "EMAIL":
-            schema[key].match[0] = /^\S+@\S+\.\S+$/;
-            break;
-          case "ALPHA":
-            schema[key].match[0] = /^[a-zA-Z\s]+$/;
-            break;
-          case "PASSWORD":
-            schema[key].match[0] =
-              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-            break;
-          default:
-            break;
-        }
-      }
+    data = fs.readFileSync("src/schema/" + collection + ".json", "utf8");
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return { schema: null, pages: null };
+    }
+    throw error;
+  }
 
-      if (schema[key]?.default !== undefined) {
-        switch (schema[key]?.default) {
-          case "DATENOW":
-            schema[key].default = Date.now();
-            break;
-          case "DATEAFTER":
-            schema[key].default = Date.now() + schema[key]["MILISEC"];
-            delete schema[key]["MILISEC"];
-            break;
-          default:
-            break;
-        }
+  const dataObject = JSON.parse(data);
+  const schema = dataObject?.schema;
+  const pages = dataObject?.pages;
+  const keys = Object.keys(schema);
+  for (const key of keys) {
+    if (schema[key]?.match?.[0] !== undefined) {
+      switch (schema[key]?.match?.[0]) {
+        case "EMAIL":
+          schema[key].match[0] = /^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$/;
+          break;
+        case "ALPHA":
+          schema[key].match[0] = /^[a-zA-Z\s]+$/;
+          break;
+        case "PASSWORD":
+          schema[key].match[0] =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+          break;
+        default:
+          break;
       }
     }
-    return { schema, pages, rawSchema: JSON.parse(data)?.schema };
-  } catch (error) {
-    console.log("File not found: " + collection + ".txt");
-    return { schema: null, pages: null };
+
+    if (schema[key]?.default !== undefined) {
+      switch (schema[key]?.default) {
+        case "DATENOW":
+          schema[key].default = Date.now();
+          break;
+        case "DATEAFTER":
+          schema[key].default = Date.now() + schema[key]["MILISEC"];
+          delete schema[key]["MILISEC"];
+          break;
+        default:
+          break;
+      }
+    }
   }
+  return { schema, pages, rawSchema: JSON.parse(data)?.schema };
 };

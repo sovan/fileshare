@@ -15,7 +15,7 @@ type SchemaField = {
 
 type FormModalProps = {
   setShow: (show: boolean) => void;
-  onSubmit: (payload: object) => unknown;
+  onSubmit: (payload: Record<string, unknown>) => unknown;
   show: boolean;
   schema: unknown;
   serverError: unknown;
@@ -50,6 +50,11 @@ export const FormModal = ({
     reset,
     formState: { errors },
   } = useForm<Record<string, string>>();
+
+  const handleData = () =>
+    handleSubmit(async (data) => {
+      await onSubmit(data);
+    });
 
   useEffect(() => {
     const record =
@@ -132,7 +137,7 @@ export const FormModal = ({
 
   return (
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
-      <Form onSubmit={handleSubmit(onSubmit)}>
+      <Form onSubmit={handleData()}>
         <Modal.Header>
           <Modal.Title>Add a user</Modal.Title>
         </Modal.Header>

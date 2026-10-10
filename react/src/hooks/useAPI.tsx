@@ -24,6 +24,8 @@ const useAPI = () => {
   const [viewingData, setViewingData] = useState(false);
   const [alerts, setAlerts] = useState<LocalAlert[]>([]);
 
+  const [selectedRecordId, setSelectedRecordId] = useState<string>();
+
   const createAlert = (type: string, err: unknown) => {
     const id = Date.now();
     const message = err instanceof Error ? err.message : String(err);
@@ -45,27 +47,53 @@ const useAPI = () => {
     }
   }, [param.one]);
 
-  const insertData = async (payload: object) => {
+  const insertData = async (payload: Record<string, unknown>) => {
     setInsertingData(true);
-    try {
-      const response = await fetch(HOSTNAME + param.one + "/insert", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      const res = await response.json();
-      if (response?.status === 400) setServerError(res);
-      else {
-        setShowAdd(false);
-        createAlert("success", "Record inserted successfully");
-        await fetchData();
+    const { _id, ...data } = payload;
+    if (typeof _id === "string" && _id.length > 0) {
+      try {
+        const response = await fetch(HOSTNAME + param.one + "/update/" + _id, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        const res = await response.json();
+        if (response?.status === 400) setServerError(res);
+        else if (response?.status === 404) {
+          createAlert("danger", res.error || "Invalid URL");
+        } else {
+          setShowAdd(false);
+          createAlert("success", "Record updated successfully");
+          await fetchData();
+        }
+      } catch (err) {
+        createAlert("danger", err);
+      } finally {
+        setInsertingData(false);
       }
-    } catch (err) {
-      createAlert("danger", err);
-    } finally {
-      setInsertingData(false);
+    } else {
+      try {
+        const response = await fetch(HOSTNAME + param.one + "/insert", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        const res = await response.json();
+        if (response?.status === 400) setServerError(res);
+        else {
+          setShowAdd(false);
+          createAlert("success", "Record inserted successfully");
+          await fetchData();
+        }
+      } catch (err) {
+        createAlert("danger", err);
+      } finally {
+        setInsertingData(false);
+      }
     }
   };
 
@@ -112,7 +140,19 @@ const useAPI = () => {
       setViewingData(false);
     }
   };
-
+  const onEdit = async (id: string) => {
+    setViewingData(true);
+    setViewRecord([]);
+    try {
+      const response = await fetch(HOSTNAME + param.one + "/edit/" + id);
+      const res = await response.json();
+      setViewRecord(res);
+    } catch (err) {
+      createAlert("danger", err);
+    } finally {
+      setViewingData(false);
+    }
+  };
   const clearViewRecord = () => setViewRecord([]);
 
   return {
@@ -120,11 +160,13 @@ const useAPI = () => {
     fetchData,
     insertData,
     onView,
+    onEdit,
     onDelete,
     setShowDelete,
     setShowView,
     setShowAdd,
     clearViewRecord,
+    setSelectedRecordId,
     alerts,
     insertingData,
     deletingData,
@@ -137,6 +179,7 @@ const useAPI = () => {
     showDelete,
     showView,
     showAdd,
+    selectedRecordId,
   };
 };
 

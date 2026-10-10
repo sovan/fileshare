@@ -1,7 +1,4 @@
-import {
-  validatorExtract,
-  createSchemaFromTextFile,
-} from "#controller/validator.js";
+import { validatorExtract } from "#controller/validator.js";
 
 export const insertData = async (collection, data = {}) => {
   if (collection) {
@@ -25,10 +22,11 @@ export const removeData = async (collection, _id) => {
   }
 };
 
-export const findData = async (collection, query = {}, columns) => {
+export const findData = async (collection, query, columns) => {
   if (collection) {
     try {
-      const records = await collection["model"].find(query, columns);
+      const filter = query === undefined ? {} : query;
+      const records = await collection["model"].find(filter, columns);
       return records;
     } catch (error) {
       return error;
@@ -38,14 +36,15 @@ export const findData = async (collection, query = {}, columns) => {
 
 export const findAndUpdateData = async (
   collection,
-  condition = {},
+  condition,
   $set,
   settings,
 ) => {
   if (collection) {
     try {
+      const filter = condition ?? {};
       const updateReponse = await collection["model"].findOneAndUpdate(
-        condition,
+        filter,
         $set,
         settings,
       );

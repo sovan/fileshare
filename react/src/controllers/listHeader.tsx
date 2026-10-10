@@ -3,7 +3,7 @@ import { FormModal } from "./formModal";
 
 type ListHeaderProps = {
   getSchema: () => void;
-  onSubmit: (payload: object) => void;
+  onSubmit: (payload: Record<string, unknown>) => void;
   setShowAdd: (show: boolean) => void;
   schema: unknown;
   serverError: unknown;

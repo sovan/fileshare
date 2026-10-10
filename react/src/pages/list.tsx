@@ -12,10 +12,12 @@ export const List = () => {
     insertData,
     onDelete,
     onView,
+    onEdit,
     setShowDelete,
     setShowView,
     setShowAdd,
     clearViewRecord,
+    setSelectedRecordId,
     alerts,
     insertingData,
     deletingData,
@@ -28,6 +30,7 @@ export const List = () => {
     showDelete,
     showAdd,
     serverError,
+    selectedRecordId,
   } = useAPI();
 
   useEffect(() => {
@@ -54,16 +57,19 @@ export const List = () => {
         <TableView
           onDelete={onDelete}
           onView={onView}
+          onEdit={onEdit}
           setShowDelete={setShowDelete}
           setShowView={setShowView}
           setShowAdd={setShowAdd}
           getSchema={getSchema}
+          setSelectedRecordId={setSelectedRecordId}
           deletingData={deletingData}
           viewingData={viewingData}
           viewRecord={viewRecord}
           records={records}
           showView={showView}
           showDelete={showDelete}
+          selectedRecordId={selectedRecordId}
         />
       )}
     </>

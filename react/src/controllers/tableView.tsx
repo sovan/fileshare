@@ -2,7 +2,6 @@ import Table from "react-bootstrap/Table";
 import TableOperation from "./tableOperation";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
-import { useState } from "react";
 
 type TableRecord = {
   _id: string;
@@ -14,34 +13,39 @@ type TableRecord = {
 type TableViewProps = {
   onDelete: (id: string) => void;
   onView: (id: string) => void;
+  onEdit: (id: string) => void;
   setShowDelete: (show: boolean) => void;
   setShowView: (show: boolean) => void;
   getSchema: () => void;
   setShowAdd: (show: boolean) => void;
+  setSelectedRecordId: (id: string) => void;
+
   viewRecord: unknown;
   showView: boolean;
   deletingData: boolean;
   viewingData: boolean;
   showDelete: boolean;
   records?: TableRecord[];
+  selectedRecordId?: string;
 };
 
 export const TableView = ({
   onDelete,
   onView,
+  onEdit,
   getSchema,
   setShowDelete,
   setShowView,
   setShowAdd,
+  setSelectedRecordId,
   records = [],
   viewRecord,
   showDelete,
   showView,
   deletingData,
   viewingData,
+  selectedRecordId,
 }: TableViewProps) => {
-  const [selectedRecordId, setSelectedRecordId] = useState<string>();
-
   return (
     <>
       <Table striped bordered hover size="sm">
@@ -71,7 +75,7 @@ export const TableView = ({
                 onEditClick={() => {
                   setShowAdd(true);
                   getSchema();
-                  onView(eachRecord._id);
+                  onEdit(eachRecord._id);
                   setSelectedRecordId(eachRecord._id);
                 }}
               />

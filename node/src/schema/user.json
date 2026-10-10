@@ -155,6 +155,11 @@
       "updatedAt": 1,
       "_id": 0
     },
+    "edit": {
+      "fname": 1,
+      "lname": 1,
+      "email": 1
+    },
     "login": [
       "authToken",
       "lastActive"
