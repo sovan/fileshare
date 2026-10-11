@@ -22,12 +22,30 @@ export const removeData = async (collection, _id) => {
   }
 };
 
-export const findData = async (collection, query, columns) => {
+export const findData = async (
+  collection,
+  query,
+  columns,
+  page = 1,
+  pageSize = 10,
+) => {
   if (collection) {
     try {
       const filter = query === undefined ? {} : query;
-      const records = await collection["model"].find(filter, columns);
-      return records;
+      const [records, totalRecords] = await Promise.all([
+        collection["model"]
+          .find(filter, columns)
+          .skip((page - 1) * pageSize)
+          .limit(pageSize),
+        collection["model"].countDocuments(filter),
+      ]);
+      return {
+        records,
+        totalRecords,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(totalRecords / pageSize)),
+      };
     } catch (error) {
       return error;
     }

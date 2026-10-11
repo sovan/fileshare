@@ -24,6 +24,9 @@ export const List = () => {
     deletingData,
     viewingData,
     records,
+    currentPage,
+    totalPages,
+    setCurrentPage,
     schema,
     viewRecord,
     loadingList,
@@ -72,6 +75,9 @@ export const List = () => {
           showView={showView}
           showDelete={showDelete}
           selectedRecordId={selectedRecordId}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
         />
       )}
     </>

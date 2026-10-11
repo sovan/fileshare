@@ -1,4 +1,5 @@
 import Table from "react-bootstrap/Table";
+import Pagination from "react-bootstrap/Pagination";
 import TableOperation from "./tableOperation";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
@@ -6,9 +7,6 @@ import { ViewModal } from "./viewModal";
 type TableRecord = {
   [key: string]: unknown;
   _id: string;
-  fname: string;
-  lname: string;
-  email: string;
 };
 
 type SchemaField = {
@@ -33,6 +31,9 @@ type TableViewProps = {
   records?: TableRecord[];
   selectedRecordId?: string;
   schema: unknown;
+  currentPage: number;
+  totalPages: number;
+  setCurrentPage: (page: number) => void;
 };
 
 const formatCellValue = (value: unknown): string | number => {
@@ -58,6 +59,9 @@ export const TableView = ({
   viewingData,
   selectedRecordId,
   schema,
+  currentPage,
+  totalPages,
+  setCurrentPage,
 }: TableViewProps) => {
   const schemaFields =
     schema && typeof schema === "object" && !Array.isArray(schema)
@@ -104,6 +108,25 @@ export const TableView = ({
           ))}
         </tbody>
       </Table>
+      <Pagination className="justify-content-center">
+        <Pagination.First
+          disabled={currentPage <= 1}
+          onClick={() => setCurrentPage(1)}
+        />
+        <Pagination.Prev
+          disabled={currentPage <= 1}
+          onClick={() => setCurrentPage(currentPage - 1)}
+        />
+        <Pagination.Item active>{`${currentPage} / ${totalPages}`}</Pagination.Item>
+        <Pagination.Next
+          disabled={currentPage >= totalPages}
+          onClick={() => setCurrentPage(currentPage + 1)}
+        />
+        <Pagination.Last
+          disabled={currentPage >= totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+        />
+      </Pagination>
       <DeleteModal
         show={showDelete}
         setShow={setShowDelete}

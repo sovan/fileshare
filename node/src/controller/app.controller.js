@@ -13,8 +13,20 @@ let mongooseObject = {};
 
 export const list = async (req, res) => {
   const collection = req.params.one;
-  const { columns } = createSchema(collection, "list");
-  const list = await findData(mongooseObject[collection], {}, columns);
+  const { columns, pageSize } = createSchema(collection, "list");
+  const requestedPage =
+    typeof req.query.page === "string" ? Number(req.query.page) : 1;
+  const page =
+    Number.isSafeInteger(requestedPage) && requestedPage > 0
+      ? requestedPage
+      : 1;
+  const list = await findData(
+    mongooseObject[collection],
+    {},
+    columns,
+    page,
+    pageSize,
+  );
   responseData(res, list);
 };
 
@@ -107,8 +119,13 @@ const createSchema = (collection, type) => {
       .filter(([, field]) => field.operation?.includes(type))
       .map(([key]) => [key, 1]),
   );
+  const configuredPageSize = mongooseObject[collection]?.pages?.pageSize;
+  const pageSize =
+    Number.isSafeInteger(configuredPageSize) && configuredPageSize > 0
+      ? configuredPageSize
+      : 10;
 
-  return { columns };
+  return { columns, pageSize };
 };
 
 const generateRandomText = (length) =>

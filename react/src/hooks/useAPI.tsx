@@ -9,9 +9,43 @@ export type LocalAlert = {
   type: string;
 };
 
+type ListRecord = Record<string, unknown> & { _id: string };
+type ListResponse = {
+  records: ListRecord[];
+  totalRecords: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+const isListRecord = (value: unknown): value is ListRecord =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  "_id" in value &&
+  typeof value._id === "string";
+
+const isListResponse = (value: unknown): value is ListResponse =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  "records" in value &&
+  Array.isArray(value.records) &&
+  value.records.every(isListRecord) &&
+  "totalRecords" in value &&
+  typeof value.totalRecords === "number" &&
+  "page" in value &&
+  typeof value.page === "number" &&
+  "pageSize" in value &&
+  typeof value.pageSize === "number" &&
+  "totalPages" in value &&
+  typeof value.totalPages === "number";
+
 const useAPI = () => {
   const param = useParams();
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState<ListRecord[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
   const [serverError, setServerError] = useState(undefined);
   const [viewRecord, setViewRecord] = useState({});
@@ -44,8 +78,18 @@ const useAPI = () => {
     setLoadingList(true);
     const request = (async () => {
       try {
-        const response = await fetch(HOSTNAME + param.one + "/list");
-        setRecords(await response.json());
+        const response = await fetch(
+          `${HOSTNAME}${param.one}/list?page=${currentPage}`,
+        );
+        const data: unknown = await response.json();
+        if (!response.ok || !isListResponse(data)) {
+          throw new Error("Unable to load records.");
+        }
+        setRecords(data.records);
+        setTotalPages(data.totalPages);
+        if (currentPage > data.totalPages) {
+          setCurrentPage(data.totalPages);
+        }
       } catch (err) {
         createAlert("danger", err);
       } finally {
@@ -55,7 +99,7 @@ const useAPI = () => {
     })();
     fetchDataRequest.current = request;
     return request;
-  }, [param.one]);
+  }, [currentPage, param.one]);
 
   const insertData = async (payload: Record<string, unknown>) => {
     setInsertingData(true);
@@ -192,6 +236,9 @@ const useAPI = () => {
     viewingData,
     schema,
     records,
+    currentPage,
+    totalPages,
+    setCurrentPage,
     serverError,
     viewRecord,
     loadingList,

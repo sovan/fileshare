@@ -148,6 +148,7 @@
     }
   },
   "pages": {
+    "pageSize": 5,
     "login": [
       "authToken",
       "lastActive"
