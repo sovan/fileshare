@@ -1,6 +1,6 @@
 import Table from "react-bootstrap/Table";
-import Pagination from "react-bootstrap/Pagination";
 import TableOperation from "./tableOperation";
+import Pagination from "./pagination";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
@@ -112,29 +112,12 @@ export const TableView = ({
           ))}
         </tbody>
       </Table>
-      <Pagination className="justify-content-center">
-        <Pagination.First
-          aria-label={getPageText(pages, "firstPage")}
-          disabled={currentPage <= 1}
-          onClick={() => setCurrentPage(1)}
-        />
-        <Pagination.Prev
-          aria-label={getPageText(pages, "previousPage")}
-          disabled={currentPage <= 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-        />
-        <Pagination.Item active>{`${currentPage} / ${totalPages}`}</Pagination.Item>
-        <Pagination.Next
-          aria-label={getPageText(pages, "nextPage")}
-          disabled={currentPage >= totalPages}
-          onClick={() => setCurrentPage(currentPage + 1)}
-        />
-        <Pagination.Last
-          aria-label={getPageText(pages, "lastPage")}
-          disabled={currentPage >= totalPages}
-          onClick={() => setCurrentPage(totalPages)}
-        />
-      </Pagination>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+        pages={pages}
+      />
       <DeleteModal
         show={showDelete}
         setShow={setShowDelete}
