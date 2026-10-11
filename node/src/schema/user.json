@@ -9,7 +9,8 @@
         "view",
         "update",
         "list",
-        "edit"
+        "edit",
+        "sort"
       ],
       "type": "String",
       "trim": true,
@@ -35,7 +36,8 @@
         "view",
         "update",
         "list",
-        "edit"
+        "edit",
+        "sort"
       ],
       "type": "String",
       "required": [
@@ -65,7 +67,8 @@
         "view",
         "update",
         "list",
-        "edit"
+        "edit",
+        "sort"
       ],
       "type": "String",
       "required": [
@@ -116,15 +119,17 @@
       "placeHolder": "Enter a password",
       "name": "Created date",
       "operation": [
-        "view"
+        "view",
+        "sort"
       ],
-      "type": "Date",
-      "default": "DATENOW"
+      "type": "Date"
     },
     "updatedAt": {
       "name": "Updated date",
       "type": "Date",
-      "default": "DATENOW"
+      "operation": [
+        "view"
+      ]
     },
     "passwordExpired": {
       "name": "Password expired date",
@@ -160,6 +165,7 @@
     "viewTooltip": "View",
     "heading": "User management",
     "viewTitle": "View user",
+    "viewDateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
     "closeButton": "Close",
     "closeAddButton": "Close Add",
     "closeUpdateButton": "Close Update",
@@ -191,6 +197,9 @@
     "insertSuccess": "Record inserted successfully",
     "deleteSuccess": "Record deleted successfully",
     "pageSize": 5,
+    "listSort": {
+      "createdAt": -1
+    },
     "login": [
       "authToken",
       "lastActive"

@@ -59,6 +59,8 @@ const useAPI = () => {
   const param = useParams();
   const [records, setRecords] = useState<ListRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string>();
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
   const [pages, setPages] = useState<PageConfig>({});
@@ -76,7 +78,11 @@ const useAPI = () => {
   const [alerts, setAlerts] = useState<LocalAlert[]>([]);
 
   const [selectedRecordId, setSelectedRecordId] = useState<string>();
-  const fetchDataRequest = useRef<Promise<void> | null>(null);
+  const fetchDataRequest = useRef<{
+    key: string;
+    promise: Promise<void>;
+  } | null>(null);
+  const fetchDataRequestId = useRef(0);
   const getSchemaRequest = useRef<Promise<void> | null>(null);
   const pagesRef = useRef<PageConfig>({});
   const clearServerError = useCallback(() => setServerError(undefined), []);
@@ -91,15 +97,22 @@ const useAPI = () => {
   };
 
   const fetchData = useCallback(() => {
-    if (fetchDataRequest.current) return fetchDataRequest.current;
+    const query = new URLSearchParams({ page: String(currentPage) });
+    if (sortBy) {
+      query.set("sortBy", sortBy);
+      query.set("sortOrder", sortOrder);
+    }
+    const requestKey = `${param.one}/list?${query}`;
+    if (fetchDataRequest.current?.key === requestKey) {
+      return fetchDataRequest.current.promise;
+    }
 
+    const requestId = ++fetchDataRequestId.current;
     setListError(undefined);
     setLoadingList(true);
     const request = (async () => {
       try {
-        const response = await fetch(
-          `${HOSTNAME}${param.one}/list?page=${currentPage}`,
-        );
+        const response = await fetch(`${HOSTNAME}${requestKey}`);
         const data: unknown = await response.json();
         const fallback =
           getPageText(pagesRef.current, "loadRecordsError") ||
@@ -110,21 +123,38 @@ const useAPI = () => {
         if (!isListResponse(data)) {
           throw new Error(fallback);
         }
-        setRecords(data.records);
-        setTotalPages(data.totalPages);
-        if (currentPage > data.totalPages) {
-          setCurrentPage(data.totalPages);
+        if (requestId === fetchDataRequestId.current) {
+          setRecords(data.records);
+          setTotalPages(data.totalPages);
+          if (currentPage > data.totalPages) {
+            setCurrentPage(data.totalPages);
+          }
         }
       } catch (err) {
-        setListError(err instanceof Error ? err.message : String(err));
+        if (requestId === fetchDataRequestId.current) {
+          setListError(err instanceof Error ? err.message : String(err));
+        }
       } finally {
-        setLoadingList(false);
-        fetchDataRequest.current = null;
+        if (requestId === fetchDataRequestId.current) {
+          setLoadingList(false);
+          fetchDataRequest.current = null;
+        }
       }
     })();
-    fetchDataRequest.current = request;
+    fetchDataRequest.current = { key: requestKey, promise: request };
     return request;
-  }, [currentPage, param.one]);
+  }, [currentPage, param.one, sortBy, sortOrder]);
+
+  const toggleSort = useCallback((field: string) => {
+    setCurrentPage(1);
+    setSortOrder((currentOrder) => {
+      if (sortBy === field) {
+        return currentOrder === "asc" ? "desc" : "asc";
+      }
+      return "asc";
+    });
+    setSortBy(field);
+  }, [sortBy]);
 
   const insertData = async (payload: Record<string, unknown>) => {
     setInsertingData(true);
@@ -313,6 +343,9 @@ const useAPI = () => {
     currentPage,
     totalPages,
     setCurrentPage,
+    sortBy,
+    sortOrder,
+    toggleSort,
     serverError,
     viewRecord,
     loadingList,

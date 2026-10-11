@@ -13,19 +13,37 @@ let mongooseObject = {};
 
 export const list = async (req, res) => {
   const collection = req.params.one;
-  const { columns, pageSize } = createSchema(collection, "list");
+  const { columns, pageSize, sortableFields, defaultSort } = createSchema(
+    collection,
+    "list",
+  );
   const requestedPage =
     typeof req.query.page === "string" ? Number(req.query.page) : 1;
   const page =
     Number.isSafeInteger(requestedPage) && requestedPage > 0
       ? requestedPage
       : 1;
+  let sort = defaultSort;
+  if (req.query.sortBy !== undefined || req.query.sortOrder !== undefined) {
+    const { sortBy, sortOrder } = req.query;
+    if (
+      typeof sortBy !== "string" ||
+      !sortableFields.includes(sortBy) ||
+      (sortOrder !== "asc" && sortOrder !== "desc")
+    ) {
+      const error = new Error("Invalid sort field or direction.");
+      error.status = 400;
+      throw error;
+    }
+    sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+  }
   const list = await findData(
     mongooseObject[collection],
     {},
     columns,
     page,
     pageSize,
+    sort,
   );
   responseData(res, list);
 };
@@ -116,7 +134,7 @@ const createSchema = (collection, type) => {
       throw error;
     }
 
-    const mongooseSchema = mongoose.Schema(schema);
+    const mongooseSchema = mongoose.Schema(schema, { timestamps: true });
     mongooseObject[collection] = {
       schema: mongooseSchema.plugin(uniqueValidator, {
         message: "NOTUNIQUE",
@@ -137,8 +155,27 @@ const createSchema = (collection, type) => {
     Number.isSafeInteger(configuredPageSize) && configuredPageSize > 0
       ? configuredPageSize
       : 10;
+  const sortableFields = Object.entries(mongooseObject[collection].props)
+    .filter(([, field]) => field.operation?.includes("sort"))
+    .map(([key]) => key);
+  const configuredSort = mongooseObject[collection]?.pages?.listSort;
+  const defaultSort =
+    configuredSort &&
+    typeof configuredSort === "object" &&
+    !Array.isArray(configuredSort)
+      ? Object.fromEntries(
+          Object.entries(configuredSort).filter(
+            ([key, direction]) =>
+              sortableFields.includes(key) &&
+              (direction === 1 ||
+                direction === -1 ||
+                direction === "asc" ||
+                direction === "desc"),
+          ),
+        )
+      : {};
 
-  return { columns, pageSize };
+  return { columns, pageSize, sortableFields, defaultSort };
 };
 
 const generateRandomText = (length) =>

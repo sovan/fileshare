@@ -29,6 +29,9 @@ export const List = () => {
     currentPage,
     totalPages,
     setCurrentPage,
+    sortBy,
+    sortOrder,
+    toggleSort,
     schema,
     viewRecord,
     loadingList,
@@ -94,6 +97,9 @@ export const List = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               setCurrentPage={setCurrentPage}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={toggleSort}
             />
           )}
         </>

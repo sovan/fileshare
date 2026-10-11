@@ -6,17 +6,33 @@ import {
   getPageText,
   type PageConfig,
 } from "../utils/pageConfig";
+import { formatDateTime } from "../utils/dateTime";
 
 type ViewModalProps = {
   show: boolean;
   setShow: (show: boolean) => void;
   viewRecord: unknown;
+  schema: unknown;
   viewingData: boolean;
   pages: PageConfig;
 };
 
-const formatValue = (value: unknown): string | number => {
+type SchemaField = {
+  type?: string;
+};
+
+const formatValue = (
+  value: unknown,
+  field: SchemaField | undefined,
+  dateTimeFormat: string,
+): string | number => {
   if (value === null || value === undefined) return "";
+  if (
+    field?.type === "Date" &&
+    (typeof value === "string" || typeof value === "number" || value instanceof Date)
+  ) {
+    return formatDateTime(value, dateTimeFormat);
+  }
   if (typeof value === "string" || typeof value === "number") return value;
   return JSON.stringify(value) ?? "";
 };
@@ -25,6 +41,7 @@ export const ViewModal = ({
   show,
   setShow,
   viewRecord,
+  schema,
   viewingData,
   pages,
 }: ViewModalProps) => {
@@ -32,6 +49,14 @@ export const ViewModal = ({
     viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
       ? (viewRecord as Record<string, unknown>)
       : {};
+  const schemaFields =
+    schema && typeof schema === "object" && !Array.isArray(schema)
+      ? (schema as Record<string, SchemaField>)
+      : {};
+  const dateTimeFormat =
+    typeof pages.viewDateTimeFormat === "string"
+      ? pages.viewDateTimeFormat
+      : "MM/DD/YYYY hh:mm:ss A";
 
   return (
     <Modal show={show}>
@@ -47,7 +72,7 @@ export const ViewModal = ({
               {Object.entries(record).map(([key, value]) => (
                 <tr key={key}>
                   <td>{key}</td>
-                  <td>{formatValue(value)}</td>
+                  <td>{formatValue(value, schemaFields[key], dateTimeFormat)}</td>
                 </tr>
               ))}
             </tbody>

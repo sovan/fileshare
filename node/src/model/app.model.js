@@ -28,6 +28,7 @@ export const findData = async (
   columns,
   page = 1,
   pageSize = 10,
+  sort = {},
 ) => {
   if (collection) {
     try {
@@ -35,6 +36,7 @@ export const findData = async (
       const [records, totalRecords] = await Promise.all([
         collection["model"]
           .find(filter, columns)
+          .sort(sort)
           .skip((page - 1) * pageSize)
           .limit(pageSize),
         collection["model"].countDocuments(filter),
@@ -68,9 +70,12 @@ export const findAndUpdateData = async (collection, condition, $set) => {
   if (collection) {
     try {
       const filter = condition ?? {};
+      const update = { ...$set };
+      delete update.createdAt;
+      update.updatedAt = new Date();
       const updateReponse = await collection["model"].findOneAndUpdate(
         filter,
-        $set,
+        update,
         {
           returnDocument: "after",
           runValidators: true,

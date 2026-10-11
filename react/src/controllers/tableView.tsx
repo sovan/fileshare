@@ -1,4 +1,5 @@
-import Table from "react-bootstrap/Table";
+import { Button, Table } from "react-bootstrap";
+import { BsArrowDown, BsArrowUp, BsArrowDownUp } from "react-icons/bs";
 import TableOperation from "./tableOperation";
 import Pagination from "./pagination";
 import { DeleteModal } from "./deleteModal";
@@ -36,6 +37,9 @@ type TableViewProps = {
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
+  sortBy?: string;
+  sortOrder: "asc" | "desc";
+  onSort: (field: string) => void;
 };
 
 const formatCellValue = (value: unknown): string | number => {
@@ -43,6 +47,24 @@ const formatCellValue = (value: unknown): string | number => {
   if (value === null || value === undefined) return "";
   if (typeof value === "boolean") return String(value);
   return JSON.stringify(value) ?? "";
+};
+
+const getAriaSort = (
+  isActiveSort: boolean,
+  sortOrder: "asc" | "desc",
+): "ascending" | "descending" | "none" => {
+  if (!isActiveSort) return "none";
+  return sortOrder === "asc" ? "ascending" : "descending";
+};
+
+const getSortIcon = (isActiveSort: boolean, sortOrder: "asc" | "desc") => {
+  if (!isActiveSort) {
+    return <BsArrowDownUp className="text-muted" />;
+  }
+  if (sortOrder === "asc") {
+    return <BsArrowUp />;
+  }
+  return <BsArrowDown />;
 };
 
 export const TableView = ({
@@ -65,6 +87,9 @@ export const TableView = ({
   currentPage,
   totalPages,
   setCurrentPage,
+  sortBy,
+  sortOrder,
+  onSort,
 }: TableViewProps) => {
   const schemaFields =
     schema && typeof schema === "object" && !Array.isArray(schema)
@@ -72,7 +97,38 @@ export const TableView = ({
       : {};
   const headers = Object.entries(schemaFields)
     .filter(([, field]) => field.operation?.includes("list"))
-    .map(([key, field]) => <th key={key}>{field.name ?? key}</th>);
+    .map(([key, field]) => {
+      const label = field.name ?? key;
+      const isSortable = field.operation?.includes("sort");
+      const isActiveSort = sortBy === key;
+      return (
+        <th
+          key={key}
+          aria-sort={getAriaSort(isActiveSort, sortOrder)}
+        >
+          {isSortable ? (
+            <Button
+              variant="link"
+              className="p-0 text-decoration-none text-reset fw-semibold"
+              onClick={() => onSort(key)}
+            >
+              {label}
+              {records.length !== 1 && (
+                <span
+                  className="d-inline-flex flex-column ms-2 align-middle"
+                  aria-hidden="true"
+                  style={{ lineHeight: "0.65" }}
+                >
+                  {getSortIcon(isActiveSort, sortOrder)}
+                </span>
+              )}
+            </Button>
+          ) : (
+            label
+          )}
+        </th>
+      );
+    });
 
   const body = (eachRecord: TableRecord) =>
     Object.entries(schemaFields)
@@ -145,6 +201,7 @@ export const TableView = ({
         show={showView}
         setShow={setShowView}
         viewRecord={viewRecord}
+        schema={schema}
         viewingData={viewingData}
         pages={pages}
       />
