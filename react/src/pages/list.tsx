@@ -52,6 +52,10 @@ export const List = () => {
         clearServerError={clearServerError}
         pages={pages}
         insertingData={insertingData}
+        loadingRecord={viewingData && showAdd}
+        isLoading={
+          loadingList || insertingData || deletingData || viewingData
+        }
         serverError={serverError}
         schema={schema}
         showAdd={showAdd}

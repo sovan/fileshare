@@ -2,6 +2,7 @@ import { Button, Modal, Form } from "react-bootstrap";
 import { useEffect } from "react";
 import { useForm, type FieldError } from "react-hook-form";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
+import { Loading } from "./loading";
 
 type SchemaField = {
   name?: string;
@@ -23,6 +24,7 @@ type FormModalProps = {
   pages: PageConfig;
   serverError: unknown;
   disabled: boolean;
+  loadingRecord: boolean;
   viewRecord: unknown;
 };
 
@@ -43,6 +45,7 @@ export const FormModal = ({
   pages,
   serverError,
   disabled,
+  loadingRecord,
   viewRecord,
 }: FormModalProps) => {
   const schemaFields =
@@ -59,7 +62,7 @@ export const FormModal = ({
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<Record<string, string>>();
 
   const handleData = () =>
@@ -159,38 +162,49 @@ export const FormModal = ({
 
   return (
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
-      <Form onSubmit={handleData()}>
+      <Form
+        onSubmit={
+          loadingRecord ? (event) => event.preventDefault() : handleData()
+        }
+      >
         <Modal.Header>
           <Modal.Title>
             {getPageText(pages, isEditing ? "editTitle" : "addTitle")}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {Object.entries(schemaFields).map(([key, field]) => {
-            const fieldServerError =
-              typeof serverError === "object" &&
-              serverError !== null &&
-              key in serverError
-                ? (serverError as Record<string, unknown>)[key]
-                : undefined;
+          {loadingRecord ? (
+            <Loading pages={pages} />
+          ) : (
+            Object.entries(schemaFields).map(([key, field]) => {
+              const fieldServerError =
+                typeof serverError === "object" &&
+                serverError !== null &&
+                key in serverError
+                  ? (serverError as Record<string, unknown>)[key]
+                  : undefined;
 
-            return field.operation?.includes("add")
-              ? createInputBox(field, errors[key], key, fieldServerError)
-              : null;
-          })}
+              return field.operation?.includes("add")
+                ? createInputBox(field, errors[key], key, fieldServerError)
+                : null;
+            })
+          )}
         </Modal.Body>
         <Modal.Footer>
           <Button
             variant="secondary"
             onClick={() => setShow(false)}
-            disabled={disabled}
+            disabled={disabled || loadingRecord}
           >
             {getPageText(
               pages,
               isEditing ? "closeUpdateButton" : "closeAddButton",
             )}
           </Button>
-          <Button type="submit" disabled={disabled}>
+          <Button
+            type="submit"
+            disabled={disabled || loadingRecord || (isEditing && !isDirty)}
+          >
             {getPageText(
               pages,
               isEditing ? "editSubmitButton" : "addSubmitButton",

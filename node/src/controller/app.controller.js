@@ -132,6 +132,8 @@ const generateRandomText = (length) =>
   randomBytes(length).toString("hex").slice(0, length);
 
 const responseData = (res, json) => {
-  res.set("Content-Type", "text/html");
-  res.send(JSON.stringify(json));
+  setTimeout(() => {
+    res.set("Content-Type", "text/html");
+    res.send(JSON.stringify(json));
+  }, 2000);
 };

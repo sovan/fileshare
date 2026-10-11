@@ -242,7 +242,7 @@ const useAPI = () => {
   };
   const onEdit = async (id: string) => {
     setViewingData(true);
-    setViewRecord({});
+    setViewRecord({ _id: id });
     try {
       const response = await fetch(HOSTNAME + param.one + "/edit/" + id);
       const res = await response.json();

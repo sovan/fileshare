@@ -14,6 +14,8 @@ type ListHeaderProps = {
   serverError: unknown;
   showAdd: boolean;
   insertingData: boolean;
+  loadingRecord: boolean;
+  isLoading: boolean;
   viewRecord: unknown;
   clearViewRecord: () => void;
 };
@@ -27,6 +29,8 @@ export const ListHeader = ({
   serverError,
   showAdd,
   insertingData,
+  loadingRecord,
+  isLoading,
   viewRecord,
   clearViewRecord,
 }: ListHeaderProps) => {
@@ -49,20 +53,21 @@ export const ListHeader = ({
         <h3>{getPageText(pages, "heading")}</h3>
       </Col>
       <Col className="text-end">
-        {pages.addButtonTooltip == null ? (
-          addButton
-        ) : (
-          <OverlayTrigger
-            placement="top"
-            overlay={
-              <Tooltip id={addTooltipId}>
-                {getPageText(pages, "addButtonTooltip")}
-              </Tooltip>
-            }
-          >
-            {addButton}
-          </OverlayTrigger>
-        )}
+        {!isLoading &&
+          (pages.addButtonTooltip == null ? (
+            addButton
+          ) : (
+            <OverlayTrigger
+              placement="top"
+              overlay={
+                <Tooltip id={addTooltipId}>
+                  {getPageText(pages, "addButtonTooltip")}
+                </Tooltip>
+              }
+            >
+              {addButton}
+            </OverlayTrigger>
+          ))}
       </Col>
       <FormModal
         setShow={setShowAdd}
@@ -73,6 +78,7 @@ export const ListHeader = ({
         serverError={serverError}
         clearServerError={clearServerError}
         disabled={insertingData}
+        loadingRecord={loadingRecord}
         viewRecord={viewRecord}
       />
     </Row>
