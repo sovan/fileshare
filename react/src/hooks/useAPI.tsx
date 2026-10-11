@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getPageText,
   isPageConfig,
@@ -7,6 +7,10 @@ import {
 } from "../utils/pageConfig";
 
 const HOSTNAME = "http://localhost:3000/";
+const getAuthHeaders = (): Record<string, string> => {
+  const authToken = localStorage.getItem("authToken");
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+};
 
 export type LocalAlert = {
   id: number;
@@ -57,6 +61,7 @@ const getApiErrorMessage = (value: unknown, fallback: string): string =>
 
 const useAPI = () => {
   const param = useParams();
+  const navigate = useNavigate();
   const [records, setRecords] = useState<ListRecord[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>();
@@ -86,6 +91,16 @@ const useAPI = () => {
   const getSchemaRequest = useRef<Promise<void> | null>(null);
   const pagesRef = useRef<PageConfig>({});
   const clearServerError = useCallback(() => setServerError(undefined), []);
+  const redirectOnUnauthorized = useCallback(
+    (response: Response) => {
+      if (response.status !== 401) return false;
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("_id");
+      void navigate(`/${param.one}/login`, { replace: true });
+      return true;
+    },
+    [navigate, param.one],
+  );
 
   const createAlert = (type: string, err: unknown) => {
     const id = Date.now();
@@ -98,6 +113,10 @@ const useAPI = () => {
 
   const fetchData = useCallback(() => {
     const query = new URLSearchParams({ page: String(currentPage) });
+    const userId = localStorage.getItem("_id");
+    if (localStorage.getItem("authToken") && userId) {
+      query.set("_id", userId);
+    }
     if (sortBy) {
       query.set("sortBy", sortBy);
       query.set("sortOrder", sortOrder);
@@ -112,7 +131,12 @@ const useAPI = () => {
     setLoadingList(true);
     const request = (async () => {
       try {
-        const response = await fetch(`${HOSTNAME}${requestKey}`);
+        const response = await fetch(`${HOSTNAME}${requestKey}`, {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
+        if (redirectOnUnauthorized(response)) return;
         const data: unknown = await response.json();
         const fallback =
           getPageText(pagesRef.current, "loadRecordsError") ||
@@ -143,7 +167,7 @@ const useAPI = () => {
     })();
     fetchDataRequest.current = { key: requestKey, promise: request };
     return request;
-  }, [currentPage, param.one, sortBy, sortOrder]);
+  }, [currentPage, param.one, redirectOnUnauthorized, sortBy, sortOrder]);
 
   const toggleSort = useCallback((field: string) => {
     setCurrentPage(1);
@@ -156,62 +180,55 @@ const useAPI = () => {
     setSortBy(field);
   }, [sortBy]);
 
+  const submitRecord = async (
+    data: Record<string, unknown>,
+    recordId?: string,
+  ) => {
+    const isUpdate = Boolean(recordId);
+    const path = isUpdate
+      ? `${param.one}/update/${recordId}`
+      : `${param.one}/insert`;
+    try {
+      const response = await fetch(HOSTNAME + path, {
+        method: isUpdate ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(data),
+      });
+      if (redirectOnUnauthorized(response)) return;
+      const result = await response.json();
+      if (isUpdate && response.status === 404) {
+        createAlert(
+          "danger",
+          result.error || getPageText(pagesRef.current, "invalidUrl"),
+        );
+        return;
+      }
+      if (!response.ok) {
+        setServerError(result);
+        return;
+      }
+
+      setShowAdd(false);
+      const successMessage = isUpdate ? "updateSuccess" : "insertSuccess";
+      createAlert("success", getPageText(pagesRef.current, successMessage));
+      await fetchData();
+    } catch (err) {
+      createAlert("danger", err);
+    }
+  };
+
   const insertData = async (payload: Record<string, unknown>) => {
     setInsertingData(true);
     const { _id, ...data } = payload;
-    if (typeof _id === "string" && _id.length > 0) {
-      try {
-        const response = await fetch(HOSTNAME + param.one + "/update/" + _id, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-        const res = await response.json();
-        if (response?.status === 400) setServerError(res);
-        else if (response?.status === 404) {
-          createAlert(
-            "danger",
-            res.error || getPageText(pagesRef.current, "invalidUrl"),
-          );
-        } else {
-          setShowAdd(false);
-          createAlert(
-            "success",
-            getPageText(pagesRef.current, "updateSuccess"),
-          );
-          await fetchData();
-        }
-      } catch (err) {
-        createAlert("danger", err);
-      } finally {
-        setInsertingData(false);
-      }
-    } else {
-      try {
-        const response = await fetch(HOSTNAME + param.one + "/insert", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-        const res = await response.json();
-        if (response?.status === 400) setServerError(res);
-        else {
-          setShowAdd(false);
-          createAlert(
-            "success",
-            getPageText(pagesRef.current, "insertSuccess"),
-          );
-          await fetchData();
-        }
-      } catch (err) {
-        createAlert("danger", err);
-      } finally {
-        setInsertingData(false);
-      }
+    const recordId =
+      typeof _id === "string" && _id.length > 0 ? _id : undefined;
+    try {
+      await submitRecord(data, recordId);
+    } finally {
+      setInsertingData(false);
     }
   };
 
@@ -263,6 +280,7 @@ const useAPI = () => {
       const response = await fetch(HOSTNAME + param.one + "/delete/" + id, {
         method: "DELETE",
       });
+      if (redirectOnUnauthorized(response)) return;
       if (!response.ok) {
         const res: unknown = await response.json();
         if (response.status === 400) {
@@ -297,6 +315,7 @@ const useAPI = () => {
     setViewRecord({});
     try {
       const response = await fetch(HOSTNAME + param.one + "/view/" + id);
+      if (redirectOnUnauthorized(response)) return;
       const res = await response.json();
       setViewRecord(res);
     } catch (err) {
@@ -310,6 +329,7 @@ const useAPI = () => {
     setViewRecord({ _id: id });
     try {
       const response = await fetch(HOSTNAME + param.one + "/edit/" + id);
+      if (redirectOnUnauthorized(response)) return;
       const res = await response.json();
       setViewRecord(res);
     } catch (err) {

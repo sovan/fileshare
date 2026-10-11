@@ -136,6 +136,20 @@
         "list"
       ]
     },
+    "createdBy": {
+      "name": "Created by",
+      "type": "String",
+      "operation": [
+        "view"
+      ]
+    },
+    "updateBy": {
+      "name": "Updated by",
+      "type": "String",
+      "operation": [
+        "view"
+      ]
+    },
     "passwordExpired": {
       "name": "Password expired date",
       "type": "Date",

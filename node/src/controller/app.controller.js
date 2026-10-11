@@ -17,6 +17,20 @@ export const list = async (req, res) => {
     collection,
     "list",
   );
+  const filter = {};
+  if (mongooseObject[collection].props.createdBy) {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+    if (
+      typeof req.query._id !== "string" ||
+      req.query._id !== String(user._id)
+    ) {
+      return res.status(403).json({ error: "User list access denied." });
+    }
+    filter.createdBy = String(user._id);
+  }
   const requestedPage =
     typeof req.query.page === "string" ? Number(req.query.page) : 1;
   const page =
@@ -39,7 +53,7 @@ export const list = async (req, res) => {
   }
   const list = await findData(
     mongooseObject[collection],
-    {},
+    filter,
     columns,
     page,
     pageSize,
@@ -51,8 +65,39 @@ export const list = async (req, res) => {
 export const view = async (req, res) => {
   const [collection, _id] = [req.params.one, req.params.two];
   const { columns } = createSchema(collection, "view");
-  const view = await findOneData(mongooseObject[collection], { _id }, columns);
-  responseData(res, view);
+  const record = await findOneData(mongooseObject[collection], { _id }, columns);
+  if (record instanceof Error) throw record;
+  if (!record) {
+    responseData(res, record);
+    return;
+  }
+
+  const viewData = record.toObject();
+  const auditFields = ["createdBy", "updateBy"].filter(
+    (field) => typeof viewData[field] === "string" && viewData[field],
+  );
+  if (auditFields.length > 0) {
+    const userIds = [...new Set(auditFields.map((field) => viewData[field]))];
+    const result = await findData(
+      mongooseObject[collection],
+      { _id: { $in: userIds } },
+      { fname: 1, lname: 1 },
+      1,
+      userIds.length,
+    );
+    if (result instanceof Error) throw result;
+
+    const userNames = new Map(
+      result.records.map((user) => [
+        String(user._id),
+        [user.fname, user.lname].filter(Boolean).join(" "),
+      ]),
+    );
+    for (const field of auditFields) {
+      viewData[field] = userNames.get(viewData[field]) ?? viewData[field];
+    }
+  }
+  responseData(res, viewData);
 };
 
 export const edit = async (req, res) => {
@@ -65,7 +110,18 @@ export const edit = async (req, res) => {
 export const insert = async (req, res) => {
   const collection = req.params.one;
   createSchema(collection);
-  const insert = await insertData(mongooseObject[collection], req.body);
+  const schema = mongooseObject[collection].props;
+  const data = { ...req.body };
+  delete data.createdBy;
+  delete data.updateBy;
+  if (schema.createdBy || schema.updateBy) {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+    if (schema.createdBy) data.createdBy = String(user._id);
+  }
+  const insert = await insertData(mongooseObject[collection], data);
   insert?._id ? res.status(200) : res.status(400);
   responseData(res, insert);
 };
@@ -80,10 +136,21 @@ export const update = async (req, res) => {
   const collection = req.params.one;
   const _id = req.params.two;
   createSchema(collection);
+  const schema = mongooseObject[collection].props;
+  const data = { ...req.body };
+  delete data.createdBy;
+  delete data.updateBy;
+  if (schema.createdBy || schema.updateBy) {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: "Authentication required." });
+    }
+    if (schema.updateBy) data.updateBy = String(user._id);
+  }
   const update = await findAndUpdateData(
     mongooseObject[collection],
     { _id },
-    req.body,
+    data,
   );
   res.status(update?._id ? 200 : 400);
   responseData(res, update);
@@ -223,6 +290,27 @@ const createSchema = (collection, type) => {
 
 const generateRandomText = (length) =>
   randomBytes(length).toString("hex").slice(0, length);
+
+const getAuthenticatedUser = async (req) => {
+  const authorization = req.get("authorization");
+  const match =
+    typeof authorization === "string"
+      ? /^Bearer\s+(\S+)$/i.exec(authorization)
+      : null;
+  if (!match) return null;
+
+  const userCollection = Object.values(mongooseObject).find(
+    (collection) => collection.props.authToken,
+  );
+  if (!userCollection) return null;
+  const user = await findOneData(
+    userCollection,
+    { authToken: match[1] },
+    { _id: 1 },
+  );
+  if (user instanceof Error) throw user;
+  return user ?? null;
+};
 
 const responseData = (res, json) => {
   setTimeout(() => {
