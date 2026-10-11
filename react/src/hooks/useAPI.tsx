@@ -53,7 +53,7 @@ const useAPI = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
   const [pages, setPages] = useState<PageConfig>({});
-  const [serverError, setServerError] = useState(undefined);
+  const [serverError, setServerError] = useState<unknown>(undefined);
   const [viewRecord, setViewRecord] = useState({});
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
@@ -210,16 +210,28 @@ const useAPI = () => {
       const response = await fetch(HOSTNAME + param.one + "/delete/" + id, {
         method: "DELETE",
       });
-      const res = await response.json();
-      if (response?.status === 400) setServerError(res);
-      else {
-        setShowDelete(false);
-        createAlert(
-          "success",
-          getPageText(pagesRef.current, "deleteSuccess"),
-        );
-        await fetchData();
+      if (!response.ok) {
+        const res: unknown = await response.json();
+        if (response.status === 400) {
+          setServerError(res);
+        } else {
+          const errorMessage =
+            typeof res === "object" &&
+            res !== null &&
+            "error" in res &&
+            typeof res.error === "string"
+              ? res.error
+              : getPageText(pagesRef.current, "invalidUrl");
+          createAlert(
+            "danger",
+            errorMessage,
+          );
+        }
+        return;
       }
+      setShowDelete(false);
+      createAlert("success", getPageText(pagesRef.current, "deleteSuccess"));
+      await fetchData();
     } catch (err) {
       createAlert("danger", err);
     } finally {

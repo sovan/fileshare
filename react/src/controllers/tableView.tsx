@@ -125,7 +125,6 @@ export const TableView = ({
         onDelete={() => {
           if (selectedRecordId) {
             onDelete(selectedRecordId);
-            setShowDelete(false);
           }
         }}
         deletingData={deletingData}

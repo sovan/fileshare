@@ -25,30 +25,34 @@ export const Pagination = ({
   totalPages,
   setCurrentPage,
   pages,
-}: PaginationProps) => (
-  <BootstrapPagination className={getAlignmentClass(pages)}>
-    <BootstrapPagination.First
-      aria-label={getPageText(pages, "firstPage")}
-      disabled={currentPage <= 1}
-      onClick={() => setCurrentPage(1)}
-    />
-    <BootstrapPagination.Prev
-      aria-label={getPageText(pages, "previousPage")}
-      disabled={currentPage <= 1}
-      onClick={() => setCurrentPage(currentPage - 1)}
-    />
-    <BootstrapPagination.Item active>{`${currentPage} / ${totalPages}`}</BootstrapPagination.Item>
-    <BootstrapPagination.Next
-      aria-label={getPageText(pages, "nextPage")}
-      disabled={currentPage >= totalPages}
-      onClick={() => setCurrentPage(currentPage + 1)}
-    />
-    <BootstrapPagination.Last
-      aria-label={getPageText(pages, "lastPage")}
-      disabled={currentPage >= totalPages}
-      onClick={() => setCurrentPage(totalPages)}
-    />
-  </BootstrapPagination>
-);
+}: PaginationProps) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <BootstrapPagination className={getAlignmentClass(pages)}>
+      <BootstrapPagination.First
+        aria-label={getPageText(pages, "firstPage")}
+        disabled={currentPage <= 1}
+        onClick={() => setCurrentPage(1)}
+      />
+      <BootstrapPagination.Prev
+        aria-label={getPageText(pages, "previousPage")}
+        disabled={currentPage <= 1}
+        onClick={() => setCurrentPage(currentPage - 1)}
+      />
+      <BootstrapPagination.Item active>{`${currentPage} / ${totalPages}`}</BootstrapPagination.Item>
+      <BootstrapPagination.Next
+        aria-label={getPageText(pages, "nextPage")}
+        disabled={currentPage >= totalPages}
+        onClick={() => setCurrentPage(currentPage + 1)}
+      />
+      <BootstrapPagination.Last
+        aria-label={getPageText(pages, "lastPage")}
+        disabled={currentPage >= totalPages}
+        onClick={() => setCurrentPage(totalPages)}
+      />
+    </BootstrapPagination>
+  );
+};
 
 export default Pagination;

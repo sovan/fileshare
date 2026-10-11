@@ -1,7 +1,11 @@
 import { Button, Modal } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
 import { Loading } from "./loading";
-import { getPageText, type PageConfig } from "../utils/pageConfig";
+import {
+  getModalButtonAlignmentClass,
+  getPageText,
+  type PageConfig,
+} from "../utils/pageConfig";
 
 type ViewModalProps = {
   show: boolean;
@@ -15,18 +19,6 @@ const formatValue = (value: unknown): string | number => {
   if (value === null || value === undefined) return "";
   if (typeof value === "string" || typeof value === "number") return value;
   return JSON.stringify(value) ?? "";
-};
-
-const getButtonAlignmentClass = (pages: PageConfig): string => {
-  switch (pages.viewModalButtonAlignment) {
-    case "left":
-      return "justify-content-start";
-    case "center":
-      return "justify-content-center";
-    case "right":
-    default:
-      return "justify-content-end";
-  }
 };
 
 export const ViewModal = ({
@@ -62,7 +54,9 @@ export const ViewModal = ({
           </Table>
         )}
       </Modal.Body>
-      <Modal.Footer className={getButtonAlignmentClass(pages)}>
+      <Modal.Footer
+        className={getModalButtonAlignmentClass(pages, "viewModalButtonAlignment")}
+      >
         <Button variant="secondary" onClick={() => setShow(false)}>
           {getPageText(pages, "closeButton")}
         </Button>

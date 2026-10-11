@@ -63,7 +63,7 @@ export const List = () => {
         clearViewRecord={clearViewRecord}
       />
       {loadingList ? (
-        <Loading pages={pages} />
+        <Loading pages={pages} centered large />
       ) : (
         <TableView
           schema={schema}

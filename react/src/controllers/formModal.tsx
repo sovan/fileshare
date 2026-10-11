@@ -1,7 +1,11 @@
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal, Form, Spinner } from "react-bootstrap";
 import { useEffect } from "react";
 import { useForm, type FieldError } from "react-hook-form";
-import { getPageText, type PageConfig } from "../utils/pageConfig";
+import {
+  getModalButtonAlignmentClass,
+  getPageText,
+  type PageConfig,
+} from "../utils/pageConfig";
 import { Loading } from "./loading";
 
 type SchemaField = {
@@ -190,7 +194,12 @@ export const FormModal = ({
             })
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer
+          className={getModalButtonAlignmentClass(
+            pages,
+            isEditing ? "editModalButtonAlignment" : "addModalButtonAlignment",
+          )}
+        >
           <Button
             variant="secondary"
             onClick={() => setShow(false)}
@@ -205,9 +214,23 @@ export const FormModal = ({
             type="submit"
             disabled={disabled || loadingRecord || (isEditing && !isDirty)}
           >
+            {disabled && (
+              <Spinner
+                animation="border"
+                size="sm"
+                className="me-2"
+                aria-hidden="true"
+              />
+            )}
             {getPageText(
               pages,
-              isEditing ? "editSubmitButton" : "addSubmitButton",
+              disabled
+                ? isEditing
+                  ? "editSubmitLoadingButton"
+                  : "addSubmitLoadingButton"
+                : isEditing
+                  ? "editSubmitButton"
+                  : "addSubmitButton",
             )}
           </Button>
         </Modal.Footer>

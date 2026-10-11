@@ -11,3 +11,24 @@ export const getPageText = (pages: unknown, key: string): string => {
   const value = pages[key];
   return typeof value === "string" ? value : "";
 };
+
+type ModalButtonAlignmentKey =
+  | "addModalButtonAlignment"
+  | "editModalButtonAlignment"
+  | "deleteModalButtonAlignment"
+  | "viewModalButtonAlignment";
+
+export const getModalButtonAlignmentClass = (
+  pages: PageConfig,
+  key: ModalButtonAlignmentKey,
+): string => {
+  switch (pages[key]) {
+    case "left":
+      return "justify-content-start";
+    case "center":
+      return "justify-content-center";
+    case "right":
+    default:
+      return "justify-content-end";
+  }
+};
