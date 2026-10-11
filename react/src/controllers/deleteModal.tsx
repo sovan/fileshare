@@ -1,9 +1,17 @@
 import { Button, Modal, Spinner } from "react-bootstrap";
-import {
-  getModalButtonAlignmentClass,
-  getPageText,
-  type PageConfig,
-} from "../utils/pageConfig";
+import { getPageText, type PageConfig } from "../utils/pageConfig";
+
+const getButtonAlignmentClass = (pages: PageConfig): string => {
+  switch (pages.deleteButtonAlignment) {
+    case "left":
+      return "justify-content-start";
+    case "center":
+      return "justify-content-center";
+    case "right":
+    default:
+      return "justify-content-end";
+  }
+};
 
 type DeleteModalProps = {
   show: boolean;
@@ -26,9 +34,7 @@ export const DeleteModal = ({
         <Modal.Title>{getPageText(pages, "deleteTitle")}</Modal.Title>
       </Modal.Header>
       <Modal.Body>{getPageText(pages, "deleteMessage")}</Modal.Body>
-      <Modal.Footer
-        className={getModalButtonAlignmentClass(pages, "deleteModalButtonAlignment")}
-      >
+      <Modal.Footer className={getButtonAlignmentClass(pages)}>
         <Button
           variant="secondary"
           onClick={() => setShow(false)}

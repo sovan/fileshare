@@ -82,42 +82,54 @@ export const TableView = ({
   return (
     <>
       <Table striped bordered hover size="sm">
-        <thead>
-          <tr>
-            {headers}
-            <th>{getPageText(pages, "operationHeader")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((eachRecord) => (
-            <tr key={eachRecord?._id}>
-              {body(eachRecord)}
-              <TableOperation
-                pages={pages}
-                onDeleteClick={() => {
-                  setSelectedRecordId(eachRecord._id);
-                  setShowDelete(true);
-                }}
-                onViewClick={() => {
-                  onView(eachRecord._id);
-                  setShowView(true);
-                }}
-                onEditClick={() => {
-                  setShowAdd(true);
-                  onEdit(eachRecord._id);
-                  setSelectedRecordId(eachRecord._id);
-                }}
-              />
+        {records.length > 0 && (
+          <thead>
+            <tr>
+              {headers}
+              <th>{getPageText(pages, "operationHeader")}</th>
             </tr>
-          ))}
+          </thead>
+        )}
+        <tbody>
+          {records.length === 0 ? (
+            <tr>
+              <td colSpan={headers.length + 1} className="text-center">
+                {getPageText(pages, "noRecordsMessage")}
+              </td>
+            </tr>
+          ) : (
+            records.map((eachRecord) => (
+              <tr key={eachRecord?._id}>
+                {body(eachRecord)}
+                <TableOperation
+                  pages={pages}
+                  onDeleteClick={() => {
+                    setSelectedRecordId(eachRecord._id);
+                    setShowDelete(true);
+                  }}
+                  onViewClick={() => {
+                    onView(eachRecord._id);
+                    setShowView(true);
+                  }}
+                  onEditClick={() => {
+                    setShowAdd(true);
+                    onEdit(eachRecord._id);
+                    setSelectedRecordId(eachRecord._id);
+                  }}
+                />
+              </tr>
+            ))
+          )}
         </tbody>
       </Table>
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-        pages={pages}
-      />
+      {records.length > 0 && totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+          pages={pages}
+        />
+      )}
       <DeleteModal
         show={showDelete}
         setShow={setShowDelete}

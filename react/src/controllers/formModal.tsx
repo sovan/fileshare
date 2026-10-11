@@ -1,6 +1,11 @@
 import { Button, Modal, Form, Spinner } from "react-bootstrap";
 import { useEffect } from "react";
-import { useForm, type FieldError } from "react-hook-form";
+import {
+  useForm,
+  type FieldError,
+  type RegisterOptions,
+  type UseFormRegister,
+} from "react-hook-form";
 import {
   getModalButtonAlignmentClass,
   getPageText,
@@ -40,6 +45,127 @@ const toFormValue = (value: unknown): string => {
   return JSON.stringify(value) ?? "";
 };
 
+const getSchemaFields = (schema: unknown): Record<string, SchemaField> =>
+  schema && typeof schema === "object" && !Array.isArray(schema)
+    ? (schema as Record<string, SchemaField>)
+    : {};
+
+type SubmitButtonContentProps = {
+  pages: PageConfig;
+  isEditing: boolean;
+  isSubmitting: boolean;
+};
+
+const SubmitButtonContent = ({
+  pages,
+  isEditing,
+  isSubmitting,
+}: SubmitButtonContentProps) => {
+  if (isSubmitting) {
+    return (
+      <>
+        <Spinner
+          animation="border"
+          size="sm"
+          className="me-2"
+          aria-hidden="true"
+        />
+        {getPageText(
+          pages,
+          isEditing ? "editSubmitLoadingButton" : "addSubmitLoadingButton",
+        )}
+      </>
+    );
+  }
+
+  return getPageText(pages, isEditing ? "editSubmitButton" : "addSubmitButton");
+};
+
+const patterns: Record<string, RegExp> = {
+  EMAIL: /^[^\s@]+@[^.\s@]+(?:\.[^.\s@]+)+$/,
+  ALPHA: /^[a-zA-Z\s]+$/,
+  PASSWORD:
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+};
+
+const getPattern = (key: string | undefined): RegExp =>
+  (key && patterns[key]) || /.*/;
+
+const getFieldRules = (
+  field: SchemaField,
+): RegisterOptions<Record<string, string>> => ({
+  required: field.required?.[1] || undefined,
+  pattern: {
+    value: getPattern(field.match?.[0]),
+    message: field.match?.[1] || "",
+  },
+  minLength: field.minLength
+    ? {
+        value: field.minLength[0],
+        message: field.minLength[1].replace(
+          "{MINLENGTH}",
+          String(field.minLength[0]),
+        ),
+      }
+    : undefined,
+  maxLength: field.maxLength
+    ? {
+        value: field.maxLength[0],
+        message: field.maxLength[1].replace(
+          "{MAXLENGTH}",
+          String(field.maxLength[0]),
+        ),
+      }
+    : undefined,
+});
+
+type FormFieldInputProps = {
+  field: SchemaField;
+  fieldError: FieldError | undefined;
+  fieldServerError: unknown;
+  name: string;
+  register: UseFormRegister<Record<string, string>>;
+};
+
+const FormFieldInput = ({
+  field,
+  fieldError,
+  fieldServerError,
+  name,
+  register,
+}: FormFieldInputProps) => (
+  <Form.Group className="mb-3" controlId={`form-field-${name}`}>
+    <Form.Label>{field.name}</Form.Label>
+    {(field.inputType === "text" || field.inputType === "password") && (
+      <Form.Control
+        placeholder={field.placeHolder}
+        type={field.inputType}
+        {...register(name, getFieldRules(field))}
+      />
+    )}
+    {typeof fieldError?.message === "string" && (
+      <p style={{ color: "red" }}>{fieldError.message}</p>
+    )}
+    {typeof fieldServerError === "string" && (
+      <p style={{ color: "red" }}>{fieldServerError}</p>
+    )}
+  </Form.Group>
+);
+
+const getFieldServerError = (
+  serverError: unknown,
+  key: string,
+): unknown => {
+  if (
+    typeof serverError === "object" &&
+    serverError !== null &&
+    key in serverError
+  ) {
+    return (serverError as Record<string, unknown>)[key];
+  }
+  return undefined;
+};
+
 export const FormModal = ({
   setShow,
   clearServerError,
@@ -52,10 +178,7 @@ export const FormModal = ({
   loadingRecord,
   viewRecord,
 }: FormModalProps) => {
-  const schemaFields =
-    schema && typeof schema === "object"
-      ? (schema as Record<string, SchemaField>)
-      : {};
+  const schemaFields = getSchemaFields(schema);
   const isEditing =
     viewRecord !== null &&
     typeof viewRecord === "object" &&
@@ -96,74 +219,6 @@ export const FormModal = ({
     if (!show) clearServerError();
   }, [clearServerError, show]);
 
-  const getPattern = (key: string | undefined): RegExp => {
-    switch (key) {
-      case "EMAIL":
-        return /^[^\s@]+@[^.\s@]+(?:\.[^.\s@]+)+$/;
-      case "ALPHA":
-        return /^[a-zA-Z\s]+$/;
-      case "PASSWORD":
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      default:
-        return /.*/;
-    }
-  };
-
-  const createInputBox = (
-    field: SchemaField,
-    fieldError: FieldError | undefined,
-    key: string,
-    fieldServerError: unknown,
-  ) => {
-    return (
-      <Form.Group
-        key={key}
-        className="mb-3"
-        controlId="exampleForm.ControlInput1"
-      >
-        <Form.Label>{field.name}</Form.Label>
-
-        {(field.inputType === "text" || field.inputType === "password") && (
-          <Form.Control
-            placeholder={field.placeHolder}
-            type={field.inputType}
-            {...register(key, {
-              required: field.required?.[1] || undefined,
-              pattern: {
-                value: getPattern(field?.match?.[0]),
-                message: field?.match?.[1] || "",
-              },
-              minLength: field.minLength
-                ? {
-                    value: field.minLength[0],
-                    message: field.minLength[1].replace(
-                      "{MINLENGTH}",
-                      String(field.minLength[0]),
-                    ),
-                  }
-                : undefined,
-              maxLength: field.maxLength
-                ? {
-                    value: field.maxLength[0],
-                    message: field.maxLength[1].replace(
-                      "{MAXLENGTH}",
-                      String(field.maxLength[0]),
-                    ),
-                  }
-                : undefined,
-            })}
-          />
-        )}
-        {typeof fieldError?.message === "string" && (
-          <p style={{ color: "red" }}>{fieldError.message}</p>
-        )}
-        {typeof fieldServerError === "string" && (
-          <p style={{ color: "red" }}>{fieldServerError}</p>
-        )}
-      </Form.Group>
-    );
-  };
-
   return (
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
       <Form
@@ -180,18 +235,18 @@ export const FormModal = ({
           {loadingRecord ? (
             <Loading pages={pages} />
           ) : (
-            Object.entries(schemaFields).map(([key, field]) => {
-              const fieldServerError =
-                typeof serverError === "object" &&
-                serverError !== null &&
-                key in serverError
-                  ? (serverError as Record<string, unknown>)[key]
-                  : undefined;
-
-              return field.operation?.includes("add")
-                ? createInputBox(field, errors[key], key, fieldServerError)
-                : null;
-            })
+            Object.entries(schemaFields)
+              .filter(([, field]) => field.operation?.includes("add"))
+              .map(([key, field]) => (
+                <FormFieldInput
+                  key={key}
+                  field={field}
+                  fieldError={errors[key]}
+                  fieldServerError={getFieldServerError(serverError, key)}
+                  name={key}
+                  register={register}
+                />
+              ))
           )}
         </Modal.Body>
         <Modal.Footer
@@ -214,24 +269,11 @@ export const FormModal = ({
             type="submit"
             disabled={disabled || loadingRecord || (isEditing && !isDirty)}
           >
-            {disabled && (
-              <Spinner
-                animation="border"
-                size="sm"
-                className="me-2"
-                aria-hidden="true"
-              />
-            )}
-            {getPageText(
-              pages,
-              disabled
-                ? isEditing
-                  ? "editSubmitLoadingButton"
-                  : "addSubmitLoadingButton"
-                : isEditing
-                  ? "editSubmitButton"
-                  : "addSubmitButton",
-            )}
+            <SubmitButtonContent
+              pages={pages}
+              isEditing={isEditing}
+              isSubmitting={disabled}
+            />
           </Button>
         </Modal.Footer>
       </Form>
