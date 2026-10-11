@@ -1,5 +1,17 @@
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, Spinner } from "react-bootstrap";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
+
+const getButtonAlignmentClass = (pages: PageConfig): string => {
+  switch (pages.deleteButtonAlignment) {
+    case "left":
+      return "justify-content-start";
+    case "center":
+      return "justify-content-center";
+    case "right":
+    default:
+      return "justify-content-end";
+  }
+};
 
 type DeleteModalProps = {
   show: boolean;
@@ -22,7 +34,7 @@ export const DeleteModal = ({
         <Modal.Title>{getPageText(pages, "deleteTitle")}</Modal.Title>
       </Modal.Header>
       <Modal.Body>{getPageText(pages, "deleteMessage")}</Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={getButtonAlignmentClass(pages)}>
         <Button
           variant="secondary"
           onClick={() => setShow(false)}
@@ -31,7 +43,19 @@ export const DeleteModal = ({
           {getPageText(pages, "cancelButton")}
         </Button>
         <Button variant="primary" onClick={onDelete} disabled={deletingData}>
-          {getPageText(pages, "deleteButton")}
+          {deletingData ? (
+            <>
+              <Spinner
+                animation="border"
+                size="sm"
+                className="me-2"
+                aria-hidden="true"
+              />
+              {getPageText(pages, "deleteLoadingMessage")}
+            </>
+          ) : (
+            getPageText(pages, "deleteButton")
+          )}
         </Button>
       </Modal.Footer>
     </Modal>

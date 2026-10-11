@@ -1,4 +1,4 @@
-import { Button, Modal, Form } from "react-bootstrap";
+import { Button, Modal, Form, Spinner } from "react-bootstrap";
 import { useEffect } from "react";
 import { useForm, type FieldError } from "react-hook-form";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
@@ -34,6 +34,58 @@ const toFormValue = (value: unknown): string => {
     return String(value);
   }
   return JSON.stringify(value) ?? "";
+};
+
+const getButtonAlignmentClass = (
+  pages: PageConfig,
+  isEditing: boolean,
+): string => {
+  const alignment =
+    pages[isEditing ? "editFormButtonAlignment" : "addFormButtonAlignment"];
+
+  switch (alignment) {
+    case "left":
+      return "justify-content-start";
+    case "center":
+      return "justify-content-center";
+    case "right":
+    default:
+      return "justify-content-end";
+  }
+};
+
+type SubmitButtonContentProps = {
+  pages: PageConfig;
+  isEditing: boolean;
+  isSubmitting: boolean;
+};
+
+const SubmitButtonContent = ({
+  pages,
+  isEditing,
+  isSubmitting,
+}: SubmitButtonContentProps) => {
+  if (isSubmitting) {
+    return (
+      <>
+        <Spinner
+          animation="border"
+          size="sm"
+          className="me-2"
+          aria-hidden="true"
+        />
+        {getPageText(
+          pages,
+          isEditing ? "updateLoadingMessage" : "insertLoadingMessage",
+        )}
+      </>
+    );
+  }
+
+  return getPageText(
+    pages,
+    isEditing ? "editSubmitButton" : "addSubmitButton",
+  );
 };
 
 export const FormModal = ({
@@ -190,7 +242,7 @@ export const FormModal = ({
             })
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className={getButtonAlignmentClass(pages, isEditing)}>
           <Button
             variant="secondary"
             onClick={() => setShow(false)}
@@ -205,10 +257,11 @@ export const FormModal = ({
             type="submit"
             disabled={disabled || loadingRecord || (isEditing && !isDirty)}
           >
-            {getPageText(
-              pages,
-              isEditing ? "editSubmitButton" : "addSubmitButton",
-            )}
+            <SubmitButtonContent
+              pages={pages}
+              isEditing={isEditing}
+              isSubmitting={disabled}
+            />
           </Button>
         </Modal.Footer>
       </Form>
