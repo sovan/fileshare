@@ -44,6 +44,11 @@ export const FormModal = ({
     schema && typeof schema === "object"
       ? (schema as Record<string, SchemaField>)
       : {};
+  const isEditing =
+    viewRecord !== null &&
+    typeof viewRecord === "object" &&
+    !Array.isArray(viewRecord) &&
+    Object.keys(viewRecord).length > 0;
   const {
     register,
     handleSubmit,
@@ -139,7 +144,7 @@ export const FormModal = ({
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
       <Form onSubmit={handleData()}>
         <Modal.Header>
-          <Modal.Title>Add a user</Modal.Title>
+          <Modal.Title>{isEditing ? "Edit user" : "Add a user"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {Object.entries(schemaFields).map(([key, field]) => {

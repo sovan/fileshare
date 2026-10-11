@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const HOSTNAME = "http://localhost:3000/";
@@ -25,6 +25,8 @@ const useAPI = () => {
   const [alerts, setAlerts] = useState<LocalAlert[]>([]);
 
   const [selectedRecordId, setSelectedRecordId] = useState<string>();
+  const fetchDataRequest = useRef<Promise<void> | null>(null);
+  const getSchemaRequest = useRef<Promise<void> | null>(null);
 
   const createAlert = (type: string, err: unknown) => {
     const id = Date.now();
@@ -35,16 +37,23 @@ const useAPI = () => {
     }, 3000);
   };
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(() => {
+    if (fetchDataRequest.current) return fetchDataRequest.current;
+
     setLoadingList(true);
-    try {
-      const response = await fetch(HOSTNAME + param.one + "/list");
-      setRecords(await response.json());
-    } catch (err) {
-      createAlert("danger", err);
-    } finally {
-      setLoadingList(false);
-    }
+    const request = (async () => {
+      try {
+        const response = await fetch(HOSTNAME + param.one + "/list");
+        setRecords(await response.json());
+      } catch (err) {
+        createAlert("danger", err);
+      } finally {
+        setLoadingList(false);
+        fetchDataRequest.current = null;
+      }
+    })();
+    fetchDataRequest.current = request;
+    return request;
   }, [param.one]);
 
   const insertData = async (payload: Record<string, unknown>) => {
@@ -97,14 +106,22 @@ const useAPI = () => {
     }
   };
 
-  const getSchema = useCallback(async () => {
+  const getSchema = useCallback(() => {
+    if (getSchemaRequest.current) return getSchemaRequest.current;
+
     setServerError(undefined);
-    try {
-      const response = await fetch(HOSTNAME + param.one + "/schema");
-      setSchema(await response.json());
-    } catch (err) {
-      createAlert("danger", err);
-    }
+    const request = (async () => {
+      try {
+        const response = await fetch(HOSTNAME + param.one + "/schema");
+        setSchema(await response.json());
+      } catch (err) {
+        createAlert("danger", err);
+      } finally {
+        getSchemaRequest.current = null;
+      }
+    })();
+    getSchemaRequest.current = request;
+    return request;
   }, [param.one]);
 
   const onDelete = async (id: string) => {
