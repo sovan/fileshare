@@ -1,10 +1,27 @@
 import { BiTrash, BiPencil } from "react-icons/bi";
-import { useId } from "react";
+import { useId, type ReactElement } from "react";
 import Button from "react-bootstrap/Button";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import { CgEyeAlt } from "react-icons/cg";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
+
+const withTooltip = (
+  button: ReactElement,
+  pages: PageConfig,
+  key: string,
+  id: string,
+) =>
+  pages[key] == null ? (
+    button
+  ) : (
+    <OverlayTrigger
+      placement="top"
+      overlay={<Tooltip id={id}>{getPageText(pages, key)}</Tooltip>}
+    >
+      {button}
+    </OverlayTrigger>
+  );
 
 type TableOperationProps = {
   onDeleteClick: () => void;
@@ -25,14 +42,7 @@ export const TableOperation = ({
 
   return (
     <td style={{ width: "150px" }}>
-      <OverlayTrigger
-        placement="top"
-        overlay={
-          <Tooltip id={deleteTooltipId}>
-            {getPageText(pages, "deleteTooltip")}
-          </Tooltip>
-        }
-      >
+      {withTooltip(
         <Button
           variant="outline-danger"
           aria-label={getPageText(pages, "deleteAriaLabel")}
@@ -40,16 +50,12 @@ export const TableOperation = ({
           onClick={onDeleteClick}
         >
           <BiTrash />
-        </Button>
-      </OverlayTrigger>
-      <OverlayTrigger
-        placement="top"
-        overlay={
-          <Tooltip id={editTooltipId}>
-            {getPageText(pages, "editTooltip")}
-          </Tooltip>
-        }
-      >
+        </Button>,
+        pages,
+        "deleteTooltip",
+        deleteTooltipId,
+      )}
+      {withTooltip(
         <Button
           variant="outline-danger"
           aria-label={getPageText(pages, "editAriaLabel")}
@@ -57,24 +63,23 @@ export const TableOperation = ({
           onClick={onEditClick}
         >
           <BiPencil />
-        </Button>
-      </OverlayTrigger>
-      <OverlayTrigger
-        placement="top"
-        overlay={
-          <Tooltip id={viewTooltipId}>
-            {getPageText(pages, "viewTooltip")}
-          </Tooltip>
-        }
-      >
+        </Button>,
+        pages,
+        "editTooltip",
+        editTooltipId,
+      )}
+      {withTooltip(
         <Button
           variant="outline-danger"
           aria-label={getPageText(pages, "viewAriaLabel")}
           onClick={onViewClick}
         >
           <CgEyeAlt />
-        </Button>
-      </OverlayTrigger>
+        </Button>,
+        pages,
+        "viewTooltip",
+        viewTooltipId,
+      )}
     </td>
   );
 };

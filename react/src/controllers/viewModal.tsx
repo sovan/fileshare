@@ -17,6 +17,18 @@ const formatValue = (value: unknown): string | number => {
   return JSON.stringify(value) ?? "";
 };
 
+const getButtonAlignmentClass = (pages: PageConfig): string => {
+  switch (pages.viewModalButtonAlignment) {
+    case "left":
+      return "justify-content-start";
+    case "center":
+      return "justify-content-center";
+    case "right":
+    default:
+      return "justify-content-end";
+  }
+};
+
 export const ViewModal = ({
   show,
   setShow,
@@ -50,12 +62,9 @@ export const ViewModal = ({
           </Table>
         )}
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={getButtonAlignmentClass(pages)}>
         <Button variant="secondary" onClick={() => setShow(false)}>
           {getPageText(pages, "closeButton")}
-        </Button>
-        <Button variant="primary" onClick={() => setShow(false)}>
-          {getPageText(pages, "saveButton")}
         </Button>
       </Modal.Footer>
     </Modal>

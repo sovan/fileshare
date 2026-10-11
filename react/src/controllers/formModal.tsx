@@ -53,7 +53,8 @@ export const FormModal = ({
     viewRecord !== null &&
     typeof viewRecord === "object" &&
     !Array.isArray(viewRecord) &&
-    Object.keys(viewRecord).length > 0;
+    "_id" in viewRecord &&
+    typeof viewRecord._id === "string";
   const {
     register,
     handleSubmit,
@@ -184,10 +185,16 @@ export const FormModal = ({
             onClick={() => setShow(false)}
             disabled={disabled}
           >
-            {getPageText(pages, "cancelButton")}
+            {getPageText(
+              pages,
+              isEditing ? "closeUpdateButton" : "closeAddButton",
+            )}
           </Button>
           <Button type="submit" disabled={disabled}>
-            {getPageText(pages, "saveButton")}
+            {getPageText(
+              pages,
+              isEditing ? "editSubmitButton" : "addSubmitButton",
+            )}
           </Button>
         </Modal.Footer>
       </Form>
