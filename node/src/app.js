@@ -2,7 +2,6 @@ import express from "express";
 import connectDB from "./db.js";
 import {
   list,
-  all,
   insert,
   login,
   schema,
@@ -23,7 +22,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-app.get("/:one", all);
+//app.get("/:one", all);
 app.get("/:one/login", login);
 app.get("/:one/schema", schema);
 

@@ -34,19 +34,30 @@ export const findData = async (collection, query, columns) => {
   }
 };
 
-export const findAndUpdateData = async (
-  collection,
-  condition,
-  $set,
-  settings,
-) => {
+export const findOneData = async (collection, query, columns) => {
+  if (collection) {
+    try {
+      const filter = query === undefined ? {} : query;
+      const records = await collection["model"].findOne(filter, columns);
+      return records;
+    } catch (error) {
+      return error;
+    }
+  }
+};
+
+export const findAndUpdateData = async (collection, condition, $set) => {
   if (collection) {
     try {
       const filter = condition ?? {};
       const updateReponse = await collection["model"].findOneAndUpdate(
         filter,
         $set,
-        settings,
+        {
+          returnDocument: "after",
+          runValidators: true,
+          context: "query",
+        },
       );
       return updateReponse;
     } catch (error) {
