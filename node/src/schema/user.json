@@ -120,7 +120,8 @@
       "name": "Created date",
       "operation": [
         "view",
-        "sort"
+        "sort",
+        "list"
       ],
       "type": "Date"
     },
@@ -128,7 +129,9 @@
       "name": "Updated date",
       "type": "Date",
       "operation": [
-        "view"
+        "view",
+        "sort",
+        "list"
       ]
     },
     "passwordExpired": {
@@ -165,7 +168,7 @@
     "viewTooltip": "View",
     "heading": "User management",
     "viewTitle": "View user",
-    "viewDateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
+    "dateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
     "closeButton": "Close",
     "closeAddButton": "Close Add",
     "closeUpdateButton": "Close Update",

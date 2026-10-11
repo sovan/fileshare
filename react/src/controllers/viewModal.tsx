@@ -29,7 +29,9 @@ const formatValue = (
   if (value === null || value === undefined) return "";
   if (
     field?.type === "Date" &&
-    (typeof value === "string" || typeof value === "number" || value instanceof Date)
+    (typeof value === "string" ||
+      typeof value === "number" ||
+      value instanceof Date)
   ) {
     return formatDateTime(value, dateTimeFormat);
   }
@@ -54,8 +56,8 @@ export const ViewModal = ({
       ? (schema as Record<string, SchemaField>)
       : {};
   const dateTimeFormat =
-    typeof pages.viewDateTimeFormat === "string"
-      ? pages.viewDateTimeFormat
+    typeof pages.dateTimeFormat === "string"
+      ? pages.dateTimeFormat
       : "MM/DD/YYYY hh:mm:ss A";
 
   return (
@@ -72,7 +74,9 @@ export const ViewModal = ({
               {Object.entries(record).map(([key, value]) => (
                 <tr key={key}>
                   <td>{key}</td>
-                  <td>{formatValue(value, schemaFields[key], dateTimeFormat)}</td>
+                  <td>
+                    {formatValue(value, schemaFields[key], dateTimeFormat)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -80,7 +84,10 @@ export const ViewModal = ({
         )}
       </Modal.Body>
       <Modal.Footer
-        className={getModalButtonAlignmentClass(pages, "viewModalButtonAlignment")}
+        className={getModalButtonAlignmentClass(
+          pages,
+          "viewModalButtonAlignment",
+        )}
       >
         <Button variant="secondary" onClick={() => setShow(false)}>
           {getPageText(pages, "closeButton")}

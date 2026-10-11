@@ -5,6 +5,7 @@ import Pagination from "./pagination";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
+import { formatDateTime } from "../utils/dateTime";
 
 type TableRecord = {
   [key: string]: unknown;
@@ -13,6 +14,7 @@ type TableRecord = {
 
 type SchemaField = {
   name?: string;
+  type?: string;
   operation?: string[];
 };
 
@@ -42,9 +44,21 @@ type TableViewProps = {
   onSort: (field: string) => void;
 };
 
-const formatCellValue = (value: unknown): string | number => {
-  if (typeof value === "string" || typeof value === "number") return value;
+const formatCellValue = (
+  value: unknown,
+  field: SchemaField | undefined,
+  dateTimeFormat: string,
+): string | number => {
   if (value === null || value === undefined) return "";
+  if (
+    field?.type === "Date" &&
+    (typeof value === "string" ||
+      typeof value === "number" ||
+      value instanceof Date)
+  ) {
+    return formatDateTime(value, dateTimeFormat);
+  }
+  if (typeof value === "string" || typeof value === "number") return value;
   if (typeof value === "boolean") return String(value);
   return JSON.stringify(value) ?? "";
 };
@@ -95,6 +109,10 @@ export const TableView = ({
     schema && typeof schema === "object" && !Array.isArray(schema)
       ? (schema as Record<string, SchemaField>)
       : {};
+  const dateTimeFormat =
+    typeof pages.dateTimeFormat === "string"
+      ? pages.dateTimeFormat
+      : "MM/DD/YYYY hh:mm:ss A";
   const headers = Object.entries(schemaFields)
     .filter(([, field]) => field.operation?.includes("list"))
     .map(([key, field]) => {
@@ -133,7 +151,11 @@ export const TableView = ({
   const body = (eachRecord: TableRecord) =>
     Object.entries(schemaFields)
       .filter(([, field]) => field.operation?.includes("list"))
-      .map(([key]) => <td key={key}>{formatCellValue(eachRecord[key])}</td>);
+      .map(([key, field]) => (
+        <td key={key}>
+          {formatCellValue(eachRecord[key], field, dateTimeFormat)}
+        </td>
+      ));
 
   return (
     <>
