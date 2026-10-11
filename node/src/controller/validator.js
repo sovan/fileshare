@@ -48,6 +48,13 @@ export const createSchemaFromTextFile = (collection) => {
   const dataObject = JSON.parse(data);
   const schema = dataObject?.schema;
   const pages = dataObject?.pages;
+  if (schema == null) {
+    return { schema: null, pages, rawSchema: schema };
+  }
+  if (typeof schema !== "object" || Array.isArray(schema)) {
+    throw new Error(`Invalid schema definition for collection "${collection}".`);
+  }
+
   const keys = Object.keys(schema);
   for (const key of keys) {
     if (schema[key]?.match?.[0] !== undefined) {

@@ -74,6 +74,13 @@ export const update = async (req, res) => {
 export const schema = async (req, res) => {
   const collection = req.params.one;
   const { rawSchema, pages } = createSchemaFromTextFile(collection);
+  if (!rawSchema) {
+    const error = new Error(
+      `Schema for collection "${collection}" was not found or is invalid.`,
+    );
+    error.status = 404;
+    throw error;
+  }
   responseData(res, { schema: rawSchema, pages });
 };
 
@@ -101,21 +108,27 @@ export const login = async (req, res) => {
 const createSchema = (collection, type) => {
   if (!mongooseObject[collection]) {
     const { schema, pages } = createSchemaFromTextFile(collection);
-    if (schema !== null) {
-      const mongooseSchema = mongoose.Schema(schema);
-      mongooseObject[collection] = {
-        schema: mongooseSchema.plugin(uniqueValidator, {
-          message: "NOTUNIQUE",
-        }),
-        model: mongoose.model(collection, mongooseSchema),
-        props: schema,
-        pages: pages,
-      };
+    if (!schema || typeof schema !== "object" || Array.isArray(schema)) {
+      const error = new Error(
+        `Schema for collection "${collection}" was not found or is invalid.`,
+      );
+      error.status = schema == null ? 404 : 500;
+      throw error;
     }
+
+    const mongooseSchema = mongoose.Schema(schema);
+    mongooseObject[collection] = {
+      schema: mongooseSchema.plugin(uniqueValidator, {
+        message: "NOTUNIQUE",
+      }),
+      model: mongoose.model(collection, mongooseSchema),
+      props: schema,
+      pages: pages,
+    };
   }
 
   const columns = Object.fromEntries(
-    Object.entries(mongooseObject[collection]?.schema?.obj)
+    Object.entries(mongooseObject[collection].props)
       .filter(([, field]) => field.operation?.includes(type))
       .map(([key]) => [key, 1]),
   );
@@ -135,5 +148,5 @@ const responseData = (res, json) => {
   setTimeout(() => {
     res.set("Content-Type", "text/html");
     res.send(JSON.stringify(json));
-  }, 2000);
+  }, 500);
 };

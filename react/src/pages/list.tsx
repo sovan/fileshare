@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import useAPI from "../hooks/useAPI";
 import { Loading } from "../controllers/loading";
 import { AlertPopup } from "../controllers/alertPopup";
+import Alert from "react-bootstrap/Alert";
 
 export const List = () => {
   const {
@@ -31,6 +32,8 @@ export const List = () => {
     schema,
     viewRecord,
     loadingList,
+    listError,
+    schemaError,
     showView,
     showDelete,
     showAdd,
@@ -46,46 +49,54 @@ export const List = () => {
   return (
     <>
       {AlertPopup(alerts)}
-      <ListHeader
-        onSubmit={insertData}
-        setShowAdd={setShowAdd}
-        clearServerError={clearServerError}
-        pages={pages}
-        insertingData={insertingData}
-        loadingRecord={viewingData && showAdd}
-        isLoading={
-          loadingList || insertingData || deletingData || viewingData
-        }
-        serverError={serverError}
-        schema={schema}
-        showAdd={showAdd}
-        viewRecord={viewRecord}
-        clearViewRecord={clearViewRecord}
-      />
-      {loadingList ? (
-        <Loading pages={pages} centered large />
+      {listError || schemaError ? (
+        <Alert variant="danger" role="alert">
+          {listError || schemaError}
+        </Alert>
       ) : (
-        <TableView
-          schema={schema}
-          pages={pages}
-          onDelete={onDelete}
-          onView={onView}
-          onEdit={onEdit}
-          setShowDelete={setShowDelete}
-          setShowView={setShowView}
-          setShowAdd={setShowAdd}
-          setSelectedRecordId={setSelectedRecordId}
-          deletingData={deletingData}
-          viewingData={viewingData}
-          viewRecord={viewRecord}
-          records={records}
-          showView={showView}
-          showDelete={showDelete}
-          selectedRecordId={selectedRecordId}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-        />
+        <>
+          <ListHeader
+            onSubmit={insertData}
+            setShowAdd={setShowAdd}
+            clearServerError={clearServerError}
+            pages={pages}
+            insertingData={insertingData}
+            loadingRecord={viewingData && showAdd}
+            isLoading={
+              loadingList || insertingData || deletingData || viewingData
+            }
+            serverError={serverError}
+            schema={schema}
+            showAdd={showAdd}
+            viewRecord={viewRecord}
+            clearViewRecord={clearViewRecord}
+          />
+          {loadingList ? (
+            <Loading pages={pages} centered large />
+          ) : (
+            <TableView
+              schema={schema}
+              pages={pages}
+              onDelete={onDelete}
+              onView={onView}
+              onEdit={onEdit}
+              setShowDelete={setShowDelete}
+              setShowView={setShowView}
+              setShowAdd={setShowAdd}
+              setSelectedRecordId={setSelectedRecordId}
+              deletingData={deletingData}
+              viewingData={viewingData}
+              viewRecord={viewRecord}
+              records={records}
+              showView={showView}
+              showDelete={showDelete}
+              selectedRecordId={selectedRecordId}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              setCurrentPage={setCurrentPage}
+            />
+          )}
+        </>
       )}
     </>
   );

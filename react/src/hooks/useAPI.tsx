@@ -46,6 +46,15 @@ const isListResponse = (value: unknown): value is ListResponse =>
   "totalPages" in value &&
   typeof value.totalPages === "number";
 
+const getApiErrorMessage = (value: unknown, fallback: string): string =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  "error" in value &&
+  typeof value.error === "string"
+    ? value.error
+    : fallback;
+
 const useAPI = () => {
   const param = useParams();
   const [records, setRecords] = useState<ListRecord[]>([]);
@@ -54,6 +63,8 @@ const useAPI = () => {
   const [schema, setSchema] = useState({});
   const [pages, setPages] = useState<PageConfig>({});
   const [serverError, setServerError] = useState<unknown>(undefined);
+  const [listError, setListError] = useState<string>();
+  const [schemaError, setSchemaError] = useState<string>();
   const [viewRecord, setViewRecord] = useState({});
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
@@ -82,6 +93,7 @@ const useAPI = () => {
   const fetchData = useCallback(() => {
     if (fetchDataRequest.current) return fetchDataRequest.current;
 
+    setListError(undefined);
     setLoadingList(true);
     const request = (async () => {
       try {
@@ -89,9 +101,14 @@ const useAPI = () => {
           `${HOSTNAME}${param.one}/list?page=${currentPage}`,
         );
         const data: unknown = await response.json();
-        if (!response.ok || !isListResponse(data)) {
-          const message = getPageText(pagesRef.current, "loadRecordsError");
-          throw new Error(message || "Unable to load records.");
+        const fallback =
+          getPageText(pagesRef.current, "loadRecordsError") ||
+          "Unable to load records.";
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(data, fallback));
+        }
+        if (!isListResponse(data)) {
+          throw new Error(fallback);
         }
         setRecords(data.records);
         setTotalPages(data.totalPages);
@@ -99,7 +116,7 @@ const useAPI = () => {
           setCurrentPage(data.totalPages);
         }
       } catch (err) {
-        createAlert("danger", err);
+        setListError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoadingList(false);
         fetchDataRequest.current = null;
@@ -172,10 +189,17 @@ const useAPI = () => {
     if (getSchemaRequest.current) return getSchemaRequest.current;
 
     setServerError(undefined);
+    setSchemaError(undefined);
     const request = (async () => {
       try {
         const response = await fetch(HOSTNAME + param.one + "/schema");
         const data: unknown = await response.json();
+        const fallback =
+          getPageText(pagesRef.current, "invalidSchemaResponse") ||
+          "Invalid schema response.";
+        if (!response.ok) {
+          throw new Error(getApiErrorMessage(data, fallback));
+        }
         if (
           typeof data !== "object" ||
           data === null ||
@@ -187,15 +211,14 @@ const useAPI = () => {
           !("pages" in data) ||
           !isPageConfig(data.pages)
         ) {
-          const pages = isPageConfig(data) ? data.pages : undefined;
-          const message = getPageText(pages, "invalidSchemaResponse");
-          throw new Error(message || "Invalid schema response.");
+          throw new Error(fallback);
         }
         setSchema(data.schema);
         pagesRef.current = data.pages;
         setPages(pagesRef.current);
+        setSchemaError(undefined);
       } catch (err) {
-        createAlert("danger", err);
+        setSchemaError(err instanceof Error ? err.message : String(err));
       } finally {
         getSchemaRequest.current = null;
       }
@@ -293,6 +316,8 @@ const useAPI = () => {
     serverError,
     viewRecord,
     loadingList,
+    listError,
+    schemaError,
     showDelete,
     showView,
     showAdd,
