@@ -1,5 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import {
+  getPageText,
+  isPageConfig,
+  type PageConfig,
+} from "../utils/pageConfig";
 
 const HOSTNAME = "http://localhost:3000/";
 
@@ -47,6 +52,7 @@ const useAPI = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
+  const [pages, setPages] = useState<PageConfig>({});
   const [serverError, setServerError] = useState(undefined);
   const [viewRecord, setViewRecord] = useState({});
   const [showDelete, setShowDelete] = useState(false);
@@ -61,6 +67,7 @@ const useAPI = () => {
   const [selectedRecordId, setSelectedRecordId] = useState<string>();
   const fetchDataRequest = useRef<Promise<void> | null>(null);
   const getSchemaRequest = useRef<Promise<void> | null>(null);
+  const pagesRef = useRef<PageConfig>({});
   const clearServerError = useCallback(() => setServerError(undefined), []);
 
   const createAlert = (type: string, err: unknown) => {
@@ -83,7 +90,8 @@ const useAPI = () => {
         );
         const data: unknown = await response.json();
         if (!response.ok || !isListResponse(data)) {
-          throw new Error("Unable to load records.");
+          const message = getPageText(pagesRef.current, "loadRecordsError");
+          throw new Error(message || "Unable to load records.");
         }
         setRecords(data.records);
         setTotalPages(data.totalPages);
@@ -116,10 +124,16 @@ const useAPI = () => {
         const res = await response.json();
         if (response?.status === 400) setServerError(res);
         else if (response?.status === 404) {
-          createAlert("danger", res.error || "Invalid URL");
+          createAlert(
+            "danger",
+            res.error || getPageText(pagesRef.current, "invalidUrl"),
+          );
         } else {
           setShowAdd(false);
-          createAlert("success", "Record updated successfully");
+          createAlert(
+            "success",
+            getPageText(pagesRef.current, "updateSuccess"),
+          );
           await fetchData();
         }
       } catch (err) {
@@ -140,7 +154,10 @@ const useAPI = () => {
         if (response?.status === 400) setServerError(res);
         else {
           setShowAdd(false);
-          createAlert("success", "Record inserted successfully");
+          createAlert(
+            "success",
+            getPageText(pagesRef.current, "insertSuccess"),
+          );
           await fetchData();
         }
       } catch (err) {
@@ -158,7 +175,25 @@ const useAPI = () => {
     const request = (async () => {
       try {
         const response = await fetch(HOSTNAME + param.one + "/schema");
-        setSchema(await response.json());
+        const data: unknown = await response.json();
+        if (
+          typeof data !== "object" ||
+          data === null ||
+          Array.isArray(data) ||
+          !("schema" in data) ||
+          typeof data.schema !== "object" ||
+          data.schema === null ||
+          Array.isArray(data.schema) ||
+          !("pages" in data) ||
+          !isPageConfig(data.pages)
+        ) {
+          const pages = isPageConfig(data) ? data.pages : undefined;
+          const message = getPageText(pages, "invalidSchemaResponse");
+          throw new Error(message || "Invalid schema response.");
+        }
+        setSchema(data.schema);
+        pagesRef.current = data.pages;
+        setPages(pagesRef.current);
       } catch (err) {
         createAlert("danger", err);
       } finally {
@@ -179,7 +214,10 @@ const useAPI = () => {
       if (response?.status === 400) setServerError(res);
       else {
         setShowDelete(false);
-        createAlert("success", "Record deleted successfully");
+        createAlert(
+          "success",
+          getPageText(pagesRef.current, "deleteSuccess"),
+        );
         await fetchData();
       }
     } catch (err) {
@@ -235,6 +273,7 @@ const useAPI = () => {
     deletingData,
     viewingData,
     schema,
+    pages,
     records,
     currentPage,
     totalPages,

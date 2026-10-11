@@ -3,6 +3,7 @@ import Pagination from "react-bootstrap/Pagination";
 import TableOperation from "./tableOperation";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
+import { getPageText, type PageConfig } from "../utils/pageConfig";
 
 type TableRecord = {
   [key: string]: unknown;
@@ -31,6 +32,7 @@ type TableViewProps = {
   records?: TableRecord[];
   selectedRecordId?: string;
   schema: unknown;
+  pages: PageConfig;
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
@@ -59,6 +61,7 @@ export const TableView = ({
   viewingData,
   selectedRecordId,
   schema,
+  pages,
   currentPage,
   totalPages,
   setCurrentPage,
@@ -82,7 +85,7 @@ export const TableView = ({
         <thead>
           <tr>
             {headers}
-            <th>Operation</th>
+            <th>{getPageText(pages, "operationHeader")}</th>
           </tr>
         </thead>
         <tbody>
@@ -90,6 +93,7 @@ export const TableView = ({
             <tr key={eachRecord?._id}>
               {body(eachRecord)}
               <TableOperation
+                pages={pages}
                 onDeleteClick={() => {
                   setSelectedRecordId(eachRecord._id);
                   setShowDelete(true);
@@ -110,19 +114,23 @@ export const TableView = ({
       </Table>
       <Pagination className="justify-content-center">
         <Pagination.First
+          aria-label={getPageText(pages, "firstPage")}
           disabled={currentPage <= 1}
           onClick={() => setCurrentPage(1)}
         />
         <Pagination.Prev
+          aria-label={getPageText(pages, "previousPage")}
           disabled={currentPage <= 1}
           onClick={() => setCurrentPage(currentPage - 1)}
         />
         <Pagination.Item active>{`${currentPage} / ${totalPages}`}</Pagination.Item>
         <Pagination.Next
+          aria-label={getPageText(pages, "nextPage")}
           disabled={currentPage >= totalPages}
           onClick={() => setCurrentPage(currentPage + 1)}
         />
         <Pagination.Last
+          aria-label={getPageText(pages, "lastPage")}
           disabled={currentPage >= totalPages}
           onClick={() => setCurrentPage(totalPages)}
         />
@@ -130,6 +138,7 @@ export const TableView = ({
       <DeleteModal
         show={showDelete}
         setShow={setShowDelete}
+        pages={pages}
         onDelete={() => {
           if (selectedRecordId) {
             onDelete(selectedRecordId);
@@ -143,6 +152,7 @@ export const TableView = ({
         setShow={setShowView}
         viewRecord={viewRecord}
         viewingData={viewingData}
+        pages={pages}
       />
     </>
   );

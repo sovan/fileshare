@@ -24,6 +24,7 @@ export const List = () => {
     deletingData,
     viewingData,
     records,
+    pages,
     currentPage,
     totalPages,
     setCurrentPage,
@@ -49,6 +50,7 @@ export const List = () => {
         onSubmit={insertData}
         setShowAdd={setShowAdd}
         clearServerError={clearServerError}
+        pages={pages}
         insertingData={insertingData}
         serverError={serverError}
         schema={schema}
@@ -57,10 +59,11 @@ export const List = () => {
         clearViewRecord={clearViewRecord}
       />
       {loadingList ? (
-        <Loading />
+        <Loading pages={pages} />
       ) : (
         <TableView
           schema={schema}
+          pages={pages}
           onDelete={onDelete}
           onView={onView}
           onEdit={onEdit}

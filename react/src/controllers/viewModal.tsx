@@ -1,12 +1,14 @@
 import { Button, Modal } from "react-bootstrap";
 import Table from "react-bootstrap/Table";
 import { Loading } from "./loading";
+import { getPageText, type PageConfig } from "../utils/pageConfig";
 
 type ViewModalProps = {
   show: boolean;
   setShow: (show: boolean) => void;
   viewRecord: unknown;
   viewingData: boolean;
+  pages: PageConfig;
 };
 
 const formatValue = (value: unknown): string | number => {
@@ -20,6 +22,7 @@ export const ViewModal = ({
   setShow,
   viewRecord,
   viewingData,
+  pages,
 }: ViewModalProps) => {
   const record =
     viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
@@ -29,11 +32,11 @@ export const ViewModal = ({
   return (
     <Modal show={show}>
       <Modal.Header>
-        <Modal.Title>View user</Modal.Title>
+        <Modal.Title>{getPageText(pages, "viewTitle")}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {viewingData ? (
-          <Loading />
+          <Loading pages={pages} />
         ) : (
           <Table striped bordered hover size="sm">
             <tbody>
@@ -49,10 +52,10 @@ export const ViewModal = ({
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={() => setShow(false)}>
-          Close
+          {getPageText(pages, "closeButton")}
         </Button>
         <Button variant="primary" onClick={() => setShow(false)}>
-          Save Changes
+          {getPageText(pages, "saveButton")}
         </Button>
       </Modal.Footer>
     </Modal>

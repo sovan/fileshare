@@ -73,8 +73,8 @@ export const update = async (req, res) => {
 
 export const schema = async (req, res) => {
   const collection = req.params.one;
-  const { rawSchema } = createSchemaFromTextFile(collection);
-  responseData(res, rawSchema);
+  const { rawSchema, pages } = createSchemaFromTextFile(collection);
+  responseData(res, { schema: rawSchema, pages });
 };
 
 export const login = async (req, res) => {

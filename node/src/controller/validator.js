@@ -81,5 +81,9 @@ export const createSchemaFromTextFile = (collection) => {
       }
     }
   }
-  return { schema, pages, rawSchema: JSON.parse(data)?.schema };
+  return {
+    schema,
+    pages,
+    rawSchema: dataObject?.schema,
+  };
 };

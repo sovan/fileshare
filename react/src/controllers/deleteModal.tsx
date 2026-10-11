@@ -1,10 +1,12 @@
 import { Button, Modal } from "react-bootstrap";
+import { getPageText, type PageConfig } from "../utils/pageConfig";
 
 type DeleteModalProps = {
   show: boolean;
   setShow: (show: boolean) => void;
   onDelete: () => void;
   deletingData: boolean;
+  pages: PageConfig;
 };
 
 export const DeleteModal = ({
@@ -12,23 +14,24 @@ export const DeleteModal = ({
   setShow,
   onDelete,
   deletingData,
+  pages,
 }: DeleteModalProps) => {
   return (
     <Modal show={show}>
       <Modal.Header>
-        <Modal.Title>Delete user</Modal.Title>
+        <Modal.Title>{getPageText(pages, "deleteTitle")}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>Are you sure you want to delete?</Modal.Body>
+      <Modal.Body>{getPageText(pages, "deleteMessage")}</Modal.Body>
       <Modal.Footer>
         <Button
           variant="secondary"
           onClick={() => setShow(false)}
           disabled={deletingData}
         >
-          Close
+          {getPageText(pages, "cancelButton")}
         </Button>
         <Button variant="primary" onClick={onDelete} disabled={deletingData}>
-          Delete
+          {getPageText(pages, "deleteButton")}
         </Button>
       </Modal.Footer>
     </Modal>

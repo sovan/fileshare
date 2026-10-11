@@ -1,6 +1,7 @@
 import { Button, Modal, Form } from "react-bootstrap";
 import { useEffect } from "react";
 import { useForm, type FieldError } from "react-hook-form";
+import { getPageText, type PageConfig } from "../utils/pageConfig";
 
 type SchemaField = {
   name?: string;
@@ -19,6 +20,7 @@ type FormModalProps = {
   onSubmit: (payload: Record<string, unknown>) => unknown;
   show: boolean;
   schema: unknown;
+  pages: PageConfig;
   serverError: unknown;
   disabled: boolean;
   viewRecord: unknown;
@@ -38,6 +40,7 @@ export const FormModal = ({
   onSubmit,
   show,
   schema,
+  pages,
   serverError,
   disabled,
   viewRecord,
@@ -157,7 +160,9 @@ export const FormModal = ({
     <Modal show={show} onHide={() => setShow(false)} centered backdrop="static">
       <Form onSubmit={handleData()}>
         <Modal.Header>
-          <Modal.Title>{isEditing ? "Edit user" : "Add a user"}</Modal.Title>
+          <Modal.Title>
+            {getPageText(pages, isEditing ? "editTitle" : "addTitle")}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {Object.entries(schemaFields).map(([key, field]) => {
@@ -179,10 +184,10 @@ export const FormModal = ({
             onClick={() => setShow(false)}
             disabled={disabled}
           >
-            Close
+            {getPageText(pages, "cancelButton")}
           </Button>
           <Button type="submit" disabled={disabled}>
-            Save Changes
+            {getPageText(pages, "saveButton")}
           </Button>
         </Modal.Footer>
       </Form>
