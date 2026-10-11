@@ -17,6 +17,7 @@ export const List = () => {
     setShowView,
     setShowAdd,
     clearViewRecord,
+    clearServerError,
     setSelectedRecordId,
     alerts,
     insertingData,
@@ -44,6 +45,7 @@ export const List = () => {
       <ListHeader
         onSubmit={insertData}
         setShowAdd={setShowAdd}
+        clearServerError={clearServerError}
         insertingData={insertingData}
         serverError={serverError}
         schema={schema}

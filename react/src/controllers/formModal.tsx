@@ -15,6 +15,7 @@ type SchemaField = {
 
 type FormModalProps = {
   setShow: (show: boolean) => void;
+  clearServerError: () => void;
   onSubmit: (payload: Record<string, unknown>) => unknown;
   show: boolean;
   schema: unknown;
@@ -33,6 +34,7 @@ const toFormValue = (value: unknown): string => {
 
 export const FormModal = ({
   setShow,
+  clearServerError,
   onSubmit,
   show,
   schema,
@@ -66,11 +68,22 @@ export const FormModal = ({
       viewRecord && typeof viewRecord === "object" && !Array.isArray(viewRecord)
         ? (viewRecord as Record<string, unknown>)
         : {};
+    const fields =
+      schema && typeof schema === "object" && !Array.isArray(schema)
+        ? (schema as Record<string, SchemaField>)
+        : {};
     const values = Object.fromEntries(
-      Object.entries(record).map(([key, value]) => [key, toFormValue(value)]),
+      Object.keys(fields)
+        .filter((key) => key !== "_id")
+        .map((key) => [key, toFormValue(record[key])]),
     );
+    values._id = toFormValue(record._id);
     reset(values);
-  }, [reset, viewRecord]);
+  }, [reset, schema, viewRecord]);
+
+  useEffect(() => {
+    if (!show) clearServerError();
+  }, [clearServerError, show]);
 
   const getPattern = (key: string | undefined): RegExp => {
     switch (key) {

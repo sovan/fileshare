@@ -4,6 +4,7 @@ import { FormModal } from "./formModal";
 type ListHeaderProps = {
   onSubmit: (payload: Record<string, unknown>) => void;
   setShowAdd: (show: boolean) => void;
+  clearServerError: () => void;
   schema: unknown;
   serverError: unknown;
   showAdd: boolean;
@@ -15,6 +16,7 @@ type ListHeaderProps = {
 export const ListHeader = ({
   onSubmit,
   setShowAdd,
+  clearServerError,
   schema,
   serverError,
   showAdd,
@@ -44,6 +46,7 @@ export const ListHeader = ({
         show={showAdd}
         schema={schema}
         serverError={serverError}
+        clearServerError={clearServerError}
         disabled={insertingData}
         viewRecord={viewRecord}
       />

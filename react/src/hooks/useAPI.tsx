@@ -14,7 +14,7 @@ const useAPI = () => {
   const [records, setRecords] = useState([]);
   const [schema, setSchema] = useState({});
   const [serverError, setServerError] = useState(undefined);
-  const [viewRecord, setViewRecord] = useState([]);
+  const [viewRecord, setViewRecord] = useState({});
   const [showDelete, setShowDelete] = useState(false);
   const [showView, setShowView] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -27,6 +27,7 @@ const useAPI = () => {
   const [selectedRecordId, setSelectedRecordId] = useState<string>();
   const fetchDataRequest = useRef<Promise<void> | null>(null);
   const getSchemaRequest = useRef<Promise<void> | null>(null);
+  const clearServerError = useCallback(() => setServerError(undefined), []);
 
   const createAlert = (type: string, err: unknown) => {
     const id = Date.now();
@@ -146,7 +147,7 @@ const useAPI = () => {
 
   const onView = async (id: string) => {
     setViewingData(true);
-    setViewRecord([]);
+    setViewRecord({});
     try {
       const response = await fetch(HOSTNAME + param.one + "/view/" + id);
       const res = await response.json();
@@ -159,7 +160,7 @@ const useAPI = () => {
   };
   const onEdit = async (id: string) => {
     setViewingData(true);
-    setViewRecord([]);
+    setViewRecord({});
     try {
       const response = await fetch(HOSTNAME + param.one + "/edit/" + id);
       const res = await response.json();
@@ -170,7 +171,7 @@ const useAPI = () => {
       setViewingData(false);
     }
   };
-  const clearViewRecord = () => setViewRecord([]);
+  const clearViewRecord = () => setViewRecord({});
 
   return {
     getSchema,
@@ -183,6 +184,7 @@ const useAPI = () => {
     setShowView,
     setShowAdd,
     clearViewRecord,
+    clearServerError,
     setSelectedRecordId,
     alerts,
     insertingData,
