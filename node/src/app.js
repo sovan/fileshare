@@ -23,7 +23,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 //app.get("/:one", all);
-app.get("/:one/login", login);
+app.post("/:one/login", login);
 app.get("/:one/schema", schema);
 
 app.get("/:one/list", list);

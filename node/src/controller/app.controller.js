@@ -106,21 +106,64 @@ export const login = async (req, res) => {
   const collection = req.params.one;
   createSchema(collection);
 
+  const pages = mongooseObject[collection].pages;
+  const loginFields = pages?.loginFields;
+  const responseFields = pages?.login;
+  if (
+    !Array.isArray(loginFields) ||
+    loginFields.length === 0 ||
+    !Array.isArray(responseFields)
+  ) {
+    const error = new Error("Login is not configured for this collection.");
+    error.status = 500;
+    throw error;
+  }
+
+  const credentials = {};
+  for (const field of loginFields) {
+    if (
+      typeof field !== "string" ||
+      !mongooseObject[collection].props[field] ||
+      typeof req.body?.[field] !== "string" ||
+      req.body[field].length === 0
+    ) {
+      return res.status(400).json({
+        error: pages.loginValidationMessage || "Enter valid login details.",
+      });
+    }
+    credentials[field] = req.body[field];
+  }
+
+  const user = await findOneData(mongooseObject[collection], credentials, {
+    _id: 1,
+  });
+  if (user instanceof Error) {
+    throw user;
+  }
+  if (!user) {
+    return res.status(401).json({
+      error: pages.loginErrorMessage || "Invalid email or password.",
+    });
+  }
+
   const login = await findAndUpdateData(
     mongooseObject[collection],
-    {
-      email: "sovan.dey1985@gmail.com",
-      password: "Admin@123",
-    },
-    { authToken: generateRandomText(30), lastActive: Date.now() },
-    {
-      returnDocument: "after",
-      select: mongooseObject[collection]["pages"]["login"].join(" "),
-    },
+    { _id: user._id },
+    { authToken: generateRandomText(30), lastActive: new Date() },
   );
 
-  res.set("Content-Type", "text/html");
-  res.send(JSON.stringify(login));
+  if (!login?._id) {
+    return res.status(500).json({
+      error: pages.loginFailureMessage || "Unable to complete login.",
+    });
+  }
+
+  const response = Object.fromEntries(
+    responseFields
+      .filter((field) => typeof field === "string")
+      .map((field) => [field, login[field]]),
+  );
+  responseData(res, response);
 };
 
 const createSchema = (collection, type) => {
