@@ -3,7 +3,6 @@ import List from "./pages/list";
 import Login from "./pages/login";
 
 const AuthenticatedList = () => {
-  const { one: collection } = useParams();
   const hasAuthentication =
     Boolean(localStorage.getItem("authToken")) &&
     Boolean(localStorage.getItem("_id"));
@@ -11,7 +10,7 @@ const AuthenticatedList = () => {
   return hasAuthentication ? (
     <List />
   ) : (
-    <Navigate to={`/${collection}/login`} replace />
+    <Navigate to="/user/login" replace />
   );
 };
 
@@ -20,6 +19,10 @@ const UnauthenticatedLogin = () => {
   const hasAuthentication =
     Boolean(localStorage.getItem("authToken")) &&
     Boolean(localStorage.getItem("_id"));
+
+  if (collection !== "user") {
+    return <Navigate to="/user/login" replace />;
+  }
 
   return hasAuthentication ? (
     <Navigate to={`/${collection}`} replace />

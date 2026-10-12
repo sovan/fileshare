@@ -84,6 +84,7 @@ const SubmitButtonContent = ({
 const patterns: Record<string, RegExp> = {
   EMAIL: /^[^\s@]+@[^.\s@]+(?:\.[^.\s@]+)+$/,
   ALPHA: /^[a-zA-Z\s]+$/,
+  ALPHABET: /^[a-zA-Z]+$/,
   PASSWORD:
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
 };

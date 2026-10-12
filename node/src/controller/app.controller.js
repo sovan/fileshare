@@ -18,18 +18,11 @@ export const list = async (req, res) => {
     "list",
   );
   const filter = {};
+  let authenticatedUser;
   if (mongooseObject[collection].props.createdBy) {
-    const user = await getAuthenticatedUser(req);
-    if (!user) {
-      return res.status(401).json({ error: "Authentication required." });
-    }
-    if (
-      typeof req.query._id !== "string" ||
-      req.query._id !== String(user._id)
-    ) {
-      return res.status(403).json({ error: "User list access denied." });
-    }
-    filter.createdBy = String(user._id);
+    authenticatedUser = await requireLoginUser(req, res);
+    if (!authenticatedUser) return;
+    filter.createdBy = String(authenticatedUser._id);
   }
   const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
   if (search) {
@@ -157,13 +150,27 @@ export const list = async (req, res) => {
     pageSize,
     sort,
   );
+  if (columns.createdBy === 1 && authenticatedUser) {
+    list.records = list.records.map((record) => {
+      const recordData = record.toObject();
+      if (String(recordData.createdBy) === String(authenticatedUser._id)) {
+        recordData.createdBy = {
+          fname: authenticatedUser.fname,
+          lname: authenticatedUser.lname,
+        };
+      }
+      return recordData;
+    });
+  }
   responseData(res, list);
 };
 
 export const view = async (req, res) => {
   const [collection, _id] = [req.params.one, req.params.two];
   const { columns } = createSchema(collection, "view");
-  const record = await findOneData(mongooseObject[collection], { _id }, columns);
+  const condition = await getRecordCondition(req, res, collection, _id);
+  if (!condition) return;
+  const record = await findOneData(mongooseObject[collection], condition, columns);
   if (record instanceof Error) throw record;
   if (!record) {
     responseData(res, record);
@@ -171,13 +178,14 @@ export const view = async (req, res) => {
   }
 
   const viewData = record.toObject();
-  const auditFields = ["createdBy", "updateBy"].filter(
-    (field) => typeof viewData[field] === "string" && viewData[field],
+  const auditFields = ["createdBy", "updatedBy"].filter(
+    (field) => typeof viewData[field] === "string" && columns[field] === 1,
   );
   if (auditFields.length > 0) {
+    createSchema("user");
     const userIds = [...new Set(auditFields.map((field) => viewData[field]))];
     const result = await findData(
-      mongooseObject[collection],
+      mongooseObject.user,
       { _id: { $in: userIds } },
       { fname: 1, lname: 1 },
       1,
@@ -188,7 +196,7 @@ export const view = async (req, res) => {
     const userNames = new Map(
       result.records.map((user) => [
         String(user._id),
-        [user.fname, user.lname].filter(Boolean).join(" "),
+        { fname: user.fname, lname: user.lname },
       ]),
     );
     for (const field of auditFields) {
@@ -201,7 +209,9 @@ export const view = async (req, res) => {
 export const edit = async (req, res) => {
   const [collection, _id] = [req.params.one, req.params.two];
   const { columns } = createSchema(collection, "edit");
-  const edit = await findOneData(mongooseObject[collection], { _id }, columns);
+  const condition = await getRecordCondition(req, res, collection, _id);
+  if (!condition) return;
+  const edit = await findOneData(mongooseObject[collection], condition, columns);
   responseData(res, edit);
 };
 
@@ -211,13 +221,12 @@ export const insert = async (req, res) => {
   const schema = mongooseObject[collection].props;
   const data = { ...req.body };
   delete data.createdBy;
+  delete data.updatedBy;
   delete data.updateBy;
-  if (schema.createdBy || schema.updateBy) {
-    const user = await getAuthenticatedUser(req);
-    if (!user) {
-      return res.status(401).json({ error: "Authentication required." });
-    }
-    if (schema.createdBy) data.createdBy = String(user._id);
+  if (schema.createdBy) {
+    const user = await requireLoginUser(req, res);
+    if (!user) return;
+    data.createdBy = String(user._id);
   }
   const insert = await insertData(mongooseObject[collection], data);
   insert?._id ? res.status(200) : res.status(400);
@@ -226,7 +235,9 @@ export const insert = async (req, res) => {
 export const remove = async (req, res) => {
   const [collection, _id] = [req.params.one, req.params.two];
   createSchema(collection);
-  const deletedUser = await removeData(mongooseObject[collection], _id);
+  const condition = await getRecordCondition(req, res, collection, _id);
+  if (!condition) return;
+  const deletedUser = await removeData(mongooseObject[collection], condition);
   responseData(res, deletedUser);
 };
 
@@ -237,17 +248,18 @@ export const update = async (req, res) => {
   const schema = mongooseObject[collection].props;
   const data = { ...req.body };
   delete data.createdBy;
+  delete data.updatedBy;
   delete data.updateBy;
-  if (schema.createdBy || schema.updateBy) {
-    const user = await getAuthenticatedUser(req);
-    if (!user) {
-      return res.status(401).json({ error: "Authentication required." });
-    }
-    if (schema.updateBy) data.updateBy = String(user._id);
+  const condition = await getRecordCondition(req, res, collection, _id);
+  if (!condition) return;
+  if (schema.updatedBy) {
+    const user = await requireLoginUser(req, res);
+    if (!user) return;
+    data.updatedBy = String(user._id);
   }
   const update = await findAndUpdateData(
     mongooseObject[collection],
-    { _id },
+    condition,
     data,
   );
   res.status(update?._id ? 200 : 400);
@@ -397,17 +409,35 @@ const getAuthenticatedUser = async (req) => {
       : null;
   if (!match) return null;
 
-  const userCollection = Object.values(mongooseObject).find(
-    (collection) => collection.props.authToken,
-  );
-  if (!userCollection) return null;
+  if (!mongooseObject.user) createSchema("user");
+  const userCollection = mongooseObject.user;
+  if (!userCollection?.props.authToken) return null;
   const user = await findOneData(
     userCollection,
     { authToken: match[1] },
-    { _id: 1 },
+    { _id: 1, fname: 1, lname: 1 },
   );
   if (user instanceof Error) throw user;
+  if (!user || req.get("x-user-id") !== String(user._id)) return null;
   return user ?? null;
+};
+
+const requireLoginUser = async (req, res) => {
+  const user = await getAuthenticatedUser(req);
+  if (user) return user;
+  res.status(401).json({ error: "Authentication required." });
+  return null;
+};
+
+const getRecordCondition = async (req, res, collectionName, recordId) => {
+  const collection = mongooseObject[collectionName];
+  const condition = { _id: recordId };
+  if (!collection.props.createdBy) return condition;
+
+  const user = await requireLoginUser(req, res);
+  if (!user) return null;
+  condition.createdBy = String(user._id);
+  return condition;
 };
 
 const responseData = (res, json) => {

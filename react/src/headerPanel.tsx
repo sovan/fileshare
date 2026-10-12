@@ -37,9 +37,14 @@ export const HeaderPanel = () => {
               User
             </Nav.Link>
             {isAuthenticated ? (
-              <Nav.Link as="button" onClick={logout}>
-                Logout
-              </Nav.Link>
+              <>
+                <Nav.Link as={Link} to="/project">
+                  Project
+                </Nav.Link>
+                <Nav.Link as="button" onClick={logout}>
+                  Logout
+                </Nav.Link>
+              </>
             ) : (
               <Nav.Link as={Link} to="/user/login">
                 Login

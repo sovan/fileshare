@@ -60,6 +60,16 @@ const formatCellValue = (
   }
   if (typeof value === "string" || typeof value === "number") return value;
   if (typeof value === "boolean") return String(value);
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "fname" in value &&
+    "lname" in value &&
+    typeof value.fname === "string" &&
+    typeof value.lname === "string"
+  ) {
+    return [value.fname, value.lname].filter(Boolean).join(" ");
+  }
   return JSON.stringify(value) ?? "";
 };
 

@@ -9,7 +9,12 @@ import {
 const HOSTNAME = "http://localhost:3000/";
 const getAuthHeaders = (): Record<string, string> => {
   const authToken = localStorage.getItem("authToken");
-  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  const userId = localStorage.getItem("_id");
+  if (!authToken || !userId) return {};
+  return {
+    Authorization: `Bearer ${authToken}`,
+    "X-User-Id": userId,
+  };
 };
 
 export type LocalAlert = {
@@ -116,10 +121,10 @@ const useAPI = () => {
       if (response.status !== 401) return false;
       localStorage.removeItem("authToken");
       localStorage.removeItem("_id");
-      void navigate(`/${param.one}/login`, { replace: true });
+      void navigate("/user/login", { replace: true });
       return true;
     },
-    [navigate, param.one],
+    [navigate],
   );
 
   const createAlert = (type: string, err: unknown) => {
@@ -142,10 +147,6 @@ const useAPI = () => {
     );
     if (Object.keys(activeFilters).length > 0) {
       query.set("filters", JSON.stringify(activeFilters));
-    }
-    const userId = localStorage.getItem("_id");
-    if (localStorage.getItem("authToken") && userId) {
-      query.set("_id", userId);
     }
     if (sortBy) {
       query.set("sortBy", sortBy);
@@ -343,6 +344,7 @@ const useAPI = () => {
     try {
       const response = await fetch(HOSTNAME + param.one + "/delete/" + id, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
       if (redirectOnUnauthorized(response)) return;
       if (!response.ok) {
@@ -378,7 +380,9 @@ const useAPI = () => {
     setViewingData(true);
     setViewRecord({});
     try {
-      const response = await fetch(HOSTNAME + param.one + "/view/" + id);
+      const response = await fetch(HOSTNAME + param.one + "/view/" + id, {
+        headers: getAuthHeaders(),
+      });
       if (redirectOnUnauthorized(response)) return;
       const res = await response.json();
       setViewRecord(res);
@@ -392,7 +396,9 @@ const useAPI = () => {
     setViewingData(true);
     setViewRecord({ _id: id });
     try {
-      const response = await fetch(HOSTNAME + param.one + "/edit/" + id);
+      const response = await fetch(HOSTNAME + param.one + "/edit/" + id, {
+        headers: getAuthHeaders(),
+      });
       if (redirectOnUnauthorized(response)) return;
       const res = await response.json();
       setViewRecord(res);

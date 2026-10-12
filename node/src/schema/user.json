@@ -144,7 +144,7 @@
         "view"
       ]
     },
-    "updateBy": {
+    "updatedBy": {
       "name": "Updated by",
       "type": "String",
       "operation": [

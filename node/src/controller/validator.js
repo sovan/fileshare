@@ -65,6 +65,9 @@ export const createSchemaFromTextFile = (collection) => {
         case "ALPHA":
           schema[key].match[0] = /^[a-zA-Z\s]+$/;
           break;
+        case "ALPHABET":
+          schema[key].match[0] = /^[a-zA-Z]+$/;
+          break;
         case "PASSWORD":
           schema[key].match[0] =
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

@@ -1,0 +1,123 @@
+{
+  "schema": {
+    "projectName": {
+      "name": "Project name",
+      "inputType": "text",
+      "placeHolder": "Enter a project name",
+      "operation": [
+        "add",
+        "view",
+        "update",
+        "list",
+        "edit",
+        "sort",
+        "filter"
+      ],
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "Project name is required."
+      ],
+      "match": [
+        "ALPHABET",
+        "Project name can contain letters only."
+      ],
+      "minLength": [
+        2,
+        "Project name must be at least {MINLENGTH} characters."
+      ],
+      "maxLength": [
+        50,
+        "Project name cannot exceed {MAXLENGTH} characters."
+      ]
+    },
+    "createdBy": {
+      "name": "Created by",
+      "type": "String",
+      "operation": [
+        "view",
+        "list"
+      ]
+    },
+    "updatedBy": {
+      "name": "Updated by",
+      "type": "String",
+      "operation": [
+        "view"
+      ]
+    },
+    "createdAt": {
+      "name": "Created at",
+      "type": "Date",
+      "operation": [
+        "view",
+        "list",
+        "sort",
+        "filter"
+      ]
+    },
+    "updatedAt": {
+      "name": "Updated at",
+      "type": "Date",
+      "operation": [
+        "view",
+        "list",
+        "sort",
+        "filter"
+      ]
+    }
+  },
+  "pages": {
+    "heading": "Project management",
+    "addButton": "Add project",
+    "addButtonTooltip": "Add a new project",
+    "addTitle": "Add a project",
+    "editTitle": "Edit project",
+    "viewTitle": "View project",
+    "cancelButton": "Cancel",
+    "closeAddButton": "Close",
+    "closeUpdateButton": "Close",
+    "closeButton": "Close",
+    "addSubmitButton": "Add project",
+    "addSubmitLoadingButton": "Adding...",
+    "editSubmitButton": "Update project",
+    "editSubmitLoadingButton": "Updating...",
+    "deleteTitle": "Delete project",
+    "deleteMessage": "Are you sure you want to delete this project?",
+    "deleteButton": "Delete",
+    "deleteLoadingButton": "Deleting...",
+    "deleteTooltip": "Delete project",
+    "editTooltip": "Edit project",
+    "viewTooltip": "View project",
+    "operationHeader": "Actions",
+    "noRecordsMessage": "No projects found.",
+    "listSearchPlaceholder": "Search projects...",
+    "listSearchButton": "Search",
+    "listSearchDebounceMs": 1000,
+    "listFilterButton": "Filter",
+    "listFilterTitle": "Filter projects",
+    "listFilterApplyButton": "Apply filters",
+    "listFilterApplyingButton": "Applying filters...",
+    "listFilterClearButton": "Clear filters",
+    "closeFilterOnAction": false,
+    "disableFilterControlsWhileApplying": true,
+    "dateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
+    "pageSize": 5,
+    "listSort": {
+      "createdAt": -1
+    },
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "paginationAlignment": "right",
+    "loadingMessage": "Loading...",
+    "loadRecordsError": "Unable to load projects.",
+    "invalidSchemaResponse": "Invalid project configuration.",
+    "invalidUrl": "Invalid project.",
+    "insertSuccess": "Project added successfully.",
+    "updateSuccess": "Project updated successfully.",
+    "deleteSuccess": "Project deleted successfully."
+  }
+}

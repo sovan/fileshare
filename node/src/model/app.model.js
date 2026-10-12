@@ -14,7 +14,10 @@ export const insertData = async (collection, data = {}) => {
 export const removeData = async (collection, _id) => {
   if (collection) {
     try {
-      const removeResponse = await collection["model"].findByIdAndDelete(_id);
+      const condition =
+        typeof _id === "object" && _id !== null ? _id : { _id };
+      const removeResponse =
+        await collection["model"].findOneAndDelete(condition);
       return removeResponse;
     } catch (error) {
       return { error: error };
