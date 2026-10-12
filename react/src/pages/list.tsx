@@ -14,6 +14,7 @@ export const List = () => {
     onDelete,
     onView,
     onEdit,
+    onCustomAction,
     setShowDelete,
     setShowView,
     setShowAdd,
@@ -103,6 +104,7 @@ export const List = () => {
               onDelete={onDelete}
               onView={onView}
               onEdit={onEdit}
+              onCustomAction={onCustomAction}
               setShowDelete={setShowDelete}
               setShowView={setShowView}
               setShowAdd={setShowAdd}

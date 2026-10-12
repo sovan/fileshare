@@ -87,9 +87,6 @@
     "deleteMessage": "Are you sure you want to delete this project?",
     "deleteButton": "Delete",
     "deleteLoadingButton": "Deleting...",
-    "deleteTooltip": "Delete project",
-    "editTooltip": "Edit project",
-    "viewTooltip": "View project",
     "operationHeader": "Actions",
     "noRecordsMessage": "No projects found.",
     "listSearchPlaceholder": "Search projects...",
@@ -103,9 +100,35 @@
     "addButtonVariant": "primary",
     "listFilterClearButtonVariant": "outline-secondary",
     "listFilterApplyButtonVariant": "primary",
-    "deleteRowButtonVariant": "outline-danger",
-    "editRowButtonVariant": "outline-danger",
-    "viewRowButtonVariant": "outline-danger",
+    "tableButtons": [
+      {
+        "id": "delete",
+        "type": "delete",
+        "label": "Delete",
+        "tooltip": "Delete project",
+        "ariaLabel": "Delete project",
+        "icon": "BiTrash",
+        "variant": "outline-danger"
+      },
+      {
+        "id": "edit",
+        "type": "edit",
+        "label": "Edit",
+        "tooltip": "Edit project",
+        "ariaLabel": "Edit project",
+        "icon": "BiPencil",
+        "variant": "outline-danger"
+      },
+      {
+        "id": "view",
+        "type": "view",
+        "label": "View",
+        "tooltip": "View project",
+        "ariaLabel": "View project",
+        "icon": "CgEyeAlt",
+        "variant": "outline-danger"
+      }
+    ],
     "deleteCancelButtonVariant": "secondary",
     "deleteConfirmButtonVariant": "primary",
     "formCancelButtonVariant": "secondary",

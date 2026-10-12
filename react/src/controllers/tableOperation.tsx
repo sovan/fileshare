@@ -1,35 +1,41 @@
-import { useId, type ReactElement } from "react";
+import { useId, useState, type ReactElement } from "react";
 import Button from "react-bootstrap/Button";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
+import type { PageConfig } from "../utils/pageConfig";
 import {
-  getPageText,
-  getPageVariant,
-  type PageConfig,
-} from "../utils/pageConfig";
+  getTableButtons,
+  type TableButtonConfig,
+} from "../utils/tableActions";
 import { ConfiguredIcon } from "./configuredIcon";
 
 const withTooltip = (
   button: ReactElement,
-  pages: PageConfig,
-  key: string,
+  label: string,
   id: string,
 ) =>
-  pages[key] == null ? (
-    button
-  ) : (
+  label ? (
     <OverlayTrigger
       placement="top"
-      overlay={<Tooltip id={id}>{getPageText(pages, key)}</Tooltip>}
+      overlay={<Tooltip id={id}>{label}</Tooltip>}
     >
       {button}
     </OverlayTrigger>
+  ) : (
+    button
   );
+
+type TableRecord = Record<string, unknown> & { _id: string };
 
 type TableOperationProps = {
   onDeleteClick: () => void;
   onViewClick: () => void;
   onEditClick: () => void;
+  onCustomAction: (
+    action: TableButtonConfig,
+    record: TableRecord,
+  ) => Promise<void>;
+  record: TableRecord;
   pages: PageConfig;
 };
 
@@ -37,52 +43,63 @@ export const TableOperation = ({
   onDeleteClick,
   onViewClick,
   onEditClick,
+  onCustomAction,
+  record,
   pages,
 }: TableOperationProps) => {
-  const editTooltipId = useId();
-  const deleteTooltipId = useId();
-  const viewTooltipId = useId();
+  const tooltipId = useId();
+  const [runningAction, setRunningAction] = useState<string>();
+  const buttons = getTableButtons(pages.tableButtons);
+
+  const onClick = async (button: TableButtonConfig) => {
+    if (button.type === "delete") onDeleteClick();
+    else if (button.type === "edit") onEditClick();
+    else if (button.type === "view") onViewClick();
+    else {
+      setRunningAction(button.id);
+      try {
+        await onCustomAction(button, record);
+      } finally {
+        setRunningAction(undefined);
+      }
+    }
+  };
 
   return (
-    <td style={{ width: "150px" }}>
-      {withTooltip(
-        <Button
-          variant={getPageVariant(pages, "deleteRowButtonVariant", "outline-danger")}
-          aria-label={getPageText(pages, "deleteAriaLabel")}
-          className="me-2"
-          onClick={onDeleteClick}
-        >
-          <ConfiguredIcon pages={pages} setting="deleteIcon" />
-        </Button>,
-        pages,
-        "deleteTooltip",
-        deleteTooltipId,
-      )}
-      {withTooltip(
-        <Button
-          variant={getPageVariant(pages, "editRowButtonVariant", "outline-danger")}
-          aria-label={getPageText(pages, "editAriaLabel")}
-          className="me-2"
-          onClick={onEditClick}
-        >
-          <ConfiguredIcon pages={pages} setting="editIcon" />
-        </Button>,
-        pages,
-        "editTooltip",
-        editTooltipId,
-      )}
-      {withTooltip(
-        <Button
-          variant={getPageVariant(pages, "viewRowButtonVariant", "outline-danger")}
-          aria-label={getPageText(pages, "viewAriaLabel")}
-          onClick={onViewClick}
-        >
-          <ConfiguredIcon pages={pages} setting="viewIcon" />
-        </Button>,
-        pages,
-        "viewTooltip",
-        viewTooltipId,
-      )}
+    <td>
+      <div className="d-flex flex-wrap gap-2">
+        {buttons.map((button, index) => {
+          const tooltip = button.tooltip ?? "";
+          const ariaLabel = button.ariaLabel ?? button.label;
+          return withTooltip(
+            <Button
+              key={button.id}
+              variant={button.variant || "outline-danger"}
+              aria-label={ariaLabel}
+              disabled={runningAction === button.id}
+              onClick={() => {
+                void onClick(button);
+              }}
+            >
+              {button.icon && (
+                <ConfiguredIcon
+                  pages={pages}
+                  setting=""
+                  iconName={button.icon}
+                  aria-hidden="true"
+                />
+              )}
+              {button.type === "api" && button.label && (
+                <span className={button.icon ? "ms-1" : undefined}>
+                  {button.label}
+                </span>
+              )}
+            </Button>,
+            tooltip,
+            `${tooltipId}-${index}`,
+          );
+        })}
+      </div>
     </td>
   );
 };

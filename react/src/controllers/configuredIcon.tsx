@@ -13,14 +13,16 @@ const fixedIcons: Record<string, IconType> = {
 type ConfiguredIconProps = ComponentProps<IconType> & {
   pages: PageConfig;
   setting: string;
+  iconName?: string;
 };
 
 export const ConfiguredIcon = ({
   pages,
   setting,
+  iconName,
   ...iconProps
 }: ConfiguredIconProps) => {
-  const name = getPageText(pages, setting);
+  const name = iconName ?? getPageText(pages, setting);
   const [loadedIcon, setLoadedIcon] = useState<{
     name: string;
     icon: IconType;

@@ -5,6 +5,7 @@ import {
   isPageConfig,
   type PageConfig,
 } from "../utils/pageConfig";
+import type { TableButtonConfig } from "../utils/tableActions";
 
 const HOSTNAME = "http://localhost:3000/";
 const getAuthHeaders = (): Record<string, string> => {
@@ -408,6 +409,71 @@ const useAPI = () => {
       setViewingData(false);
     }
   };
+
+  const onCustomAction = async (
+    action: TableButtonConfig,
+    record: ListRecord,
+  ) => {
+    try {
+      const endpoint = action.endpoint?.replace(
+        /\{([^{}]+)\}/g,
+        (_match, field: string) => {
+          if (!(field in record) || record[field] == null) {
+            throw new Error(`Missing "${field}" for action "${action.label}".`);
+          }
+          return encodeURIComponent(String(record[field]));
+        },
+      );
+      if (!endpoint || !endpoint.startsWith("/") || endpoint.startsWith("//")) {
+        throw new Error(
+          `Action "${action.label}" must use a root-relative API endpoint.`,
+        );
+      }
+
+      const url = new URL(endpoint, HOSTNAME);
+      if (url.origin !== new URL(HOSTNAME).origin) {
+        throw new Error("Table actions must target this API server.");
+      }
+
+      const response = await fetch(url, {
+        method: action.method,
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(record),
+      });
+      if (redirectOnUnauthorized(response)) return;
+
+      const responseText = await response.text();
+      let responseData: unknown = responseText;
+      if (responseText) {
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          responseData = responseText;
+        }
+      }
+      if (!response.ok) {
+        throw new Error(
+          getApiErrorMessage(
+            responseData,
+            responseText ||
+              `Action "${action.label}" failed (${response.status}).`,
+          ),
+        );
+      }
+
+      createAlert(
+        "success",
+        action.successMessage || `${action.label} completed successfully.`,
+      );
+      await fetchData();
+    } catch (error) {
+      createAlert("danger", error);
+    }
+  };
+
   const clearViewRecord = () => setViewRecord({});
 
   return {
@@ -417,6 +483,7 @@ const useAPI = () => {
     onView,
     onEdit,
     onDelete,
+    onCustomAction,
     setShowDelete,
     setShowView,
     setShowAdd,

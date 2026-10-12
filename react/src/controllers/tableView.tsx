@@ -10,6 +10,7 @@ import {
 } from "../utils/pageConfig";
 import { formatDateTime } from "../utils/dateTime";
 import { ConfiguredIcon } from "./configuredIcon";
+import type { TableButtonConfig } from "../utils/tableActions";
 
 type TableRecord = {
   [key: string]: unknown;
@@ -26,6 +27,10 @@ type TableViewProps = {
   onDelete: (id: string) => void;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
+  onCustomAction: (
+    action: TableButtonConfig,
+    record: TableRecord,
+  ) => Promise<void>;
   setShowDelete: (show: boolean) => void;
   setShowView: (show: boolean) => void;
   setShowAdd: (show: boolean) => void;
@@ -99,6 +104,7 @@ export const TableView = ({
   onDelete,
   onView,
   onEdit,
+  onCustomAction,
   setShowDelete,
   setShowView,
   setShowAdd,
@@ -199,6 +205,8 @@ export const TableView = ({
                 {body(eachRecord)}
                 <TableOperation
                   pages={pages}
+                  record={eachRecord}
+                  onCustomAction={onCustomAction}
                   onDeleteClick={() => {
                     setSelectedRecordId(eachRecord._id);
                     setShowDelete(true);
