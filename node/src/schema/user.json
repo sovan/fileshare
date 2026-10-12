@@ -122,8 +122,7 @@
       "name": "Created date",
       "operation": [
         "view",
-        "sort",
-        "list"
+        "sort"
       ],
       "type": "Date"
     },
@@ -132,8 +131,7 @@
       "type": "Date",
       "operation": [
         "view",
-        "sort",
-        "list"
+        "sort"
       ]
     },
     "createdBy": {
@@ -197,6 +195,9 @@
     "editTitle": "Edit user",
     "viewTooltip": "View",
     "heading": "User management",
+    "listSearchPlaceholder": "Search users...",
+    "listSearchButton": "Search",
+    "listSearchDebounceMs": 1000,
     "viewTitle": "View user",
     "dateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
     "closeButton": "Close",

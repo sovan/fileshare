@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getPageText,
@@ -66,6 +66,8 @@ const useAPI = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
   const [pages, setPages] = useState<PageConfig>({});
@@ -91,6 +93,21 @@ const useAPI = () => {
   const getSchemaRequest = useRef<Promise<void> | null>(null);
   const pagesRef = useRef<PageConfig>({});
   const clearServerError = useCallback(() => setServerError(undefined), []);
+  useEffect(() => {
+    const configuredDelay = pages.listSearchDebounceMs;
+    const delay =
+      typeof configuredDelay === "number" &&
+      Number.isFinite(configuredDelay) &&
+      configuredDelay >= 0
+        ? configuredDelay
+        : 1000;
+    const timer = window.setTimeout(() => {
+      setCurrentPage(1);
+      setSearch(searchInput.trim());
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [pages, searchInput]);
+
   const redirectOnUnauthorized = useCallback(
     (response: Response) => {
       if (response.status !== 401) return false;
@@ -113,6 +130,9 @@ const useAPI = () => {
 
   const fetchData = useCallback(() => {
     const query = new URLSearchParams({ page: String(currentPage) });
+    if (search.trim()) {
+      query.set("search", search.trim());
+    }
     const userId = localStorage.getItem("_id");
     if (localStorage.getItem("authToken") && userId) {
       query.set("_id", userId);
@@ -167,7 +187,15 @@ const useAPI = () => {
     })();
     fetchDataRequest.current = { key: requestKey, promise: request };
     return request;
-  }, [currentPage, param.one, redirectOnUnauthorized, sortBy, sortOrder]);
+  }, [currentPage, param.one, redirectOnUnauthorized, search, sortBy, sortOrder]);
+
+  const updateSearch = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
+  const submitSearch = useCallback(() => {
+    setCurrentPage(1);
+    setSearch(searchInput.trim());
+  }, [searchInput]);
 
   const toggleSort = useCallback((field: string) => {
     setCurrentPage(1);
@@ -366,6 +394,9 @@ const useAPI = () => {
     sortBy,
     sortOrder,
     toggleSort,
+    search: searchInput,
+    updateSearch,
+    submitSearch,
     serverError,
     viewRecord,
     loadingList,

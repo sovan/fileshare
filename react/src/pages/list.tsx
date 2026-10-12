@@ -32,6 +32,9 @@ export const List = () => {
     sortBy,
     sortOrder,
     toggleSort,
+    search,
+    updateSearch,
+    submitSearch,
     schema,
     viewRecord,
     loadingList,
@@ -73,6 +76,9 @@ export const List = () => {
             showAdd={showAdd}
             viewRecord={viewRecord}
             clearViewRecord={clearViewRecord}
+            search={search}
+            onSearch={updateSearch}
+            onSearchSubmit={submitSearch}
           />
           {loadingList ? (
             <Loading pages={pages} centered large />

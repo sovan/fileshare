@@ -1,7 +1,8 @@
-import { Row, Col, Button } from "react-bootstrap";
+import { Row, Col, Button, Form, InputGroup } from "react-bootstrap";
 import { FormModal } from "./formModal";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
 import { useId } from "react";
+import { BsSearch } from "react-icons/bs";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 
@@ -18,6 +19,9 @@ type ListHeaderProps = {
   isLoading: boolean;
   viewRecord: unknown;
   clearViewRecord: () => void;
+  search: string;
+  onSearch: (value: string) => void;
+  onSearchSubmit: () => void;
 };
 
 export const ListHeader = ({
@@ -33,6 +37,9 @@ export const ListHeader = ({
   isLoading,
   viewRecord,
   clearViewRecord,
+  search,
+  onSearch,
+  onSearchSubmit,
 }: ListHeaderProps) => {
   const addTooltipId = useId();
   const addButton = (
@@ -51,6 +58,31 @@ export const ListHeader = ({
     <Row>
       <Col>
         <h3>{getPageText(pages, "heading")}</h3>
+      </Col>
+      <Col xs={12} md={5}>
+        <InputGroup>
+          <Form.Control
+            type="search"
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onSearchSubmit();
+              }
+            }}
+            placeholder={getPageText(pages, "listSearchPlaceholder")}
+            aria-label={getPageText(pages, "listSearchPlaceholder")}
+          />
+          <Button
+            variant="outline-secondary"
+            onClick={onSearchSubmit}
+            aria-label={getPageText(pages, "listSearchButton")}
+            title={getPageText(pages, "listSearchButton")}
+          >
+            <BsSearch aria-hidden="true" />
+          </Button>
+        </InputGroup>
       </Col>
       <Col className="text-end">
         {!isLoading &&

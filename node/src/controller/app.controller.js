@@ -31,6 +31,42 @@ export const list = async (req, res) => {
     }
     filter.createdBy = String(user._id);
   }
+  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  if (search) {
+    if (search.length > 100) {
+      const error = new Error("Search text cannot exceed 100 characters.");
+      error.status = 400;
+      throw error;
+    }
+    const searchFields = Object.entries(mongooseObject[collection].props)
+      .filter(
+        ([key, field]) =>
+          columns[key] === 1 &&
+          (field.type === "String" || field.type === "Date") &&
+          key !== "password" &&
+          key !== "authToken",
+      );
+    const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (searchFields.length > 0) {
+      filter.$and = [
+        {
+          $or: searchFields.map(([key, field]) =>
+            field.type === "String"
+              ? { [key]: new RegExp(escapedSearch, "i") }
+              : {
+                  $expr: {
+                    $regexMatch: {
+                      input: { $ifNull: [{ $toString: `$${key}` }, ""] },
+                      regex: escapedSearch,
+                      options: "i",
+                    },
+                  },
+                },
+          ),
+        },
+      ];
+    }
+  }
   const requestedPage =
     typeof req.query.page === "string" ? Number(req.query.page) : 1;
   const page =
