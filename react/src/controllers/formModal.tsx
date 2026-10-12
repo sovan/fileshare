@@ -9,6 +9,7 @@ import {
 import {
   getModalButtonAlignmentClass,
   getPageText,
+  getPageVariant,
   type PageConfig,
 } from "../utils/pageConfig";
 import { Loading } from "./loading";
@@ -257,7 +258,7 @@ export const FormModal = ({
           )}
         >
           <Button
-            variant="secondary"
+            variant={getPageVariant(pages, "formCancelButtonVariant", "secondary")}
             onClick={() => setShow(false)}
             disabled={disabled || loadingRecord}
           >

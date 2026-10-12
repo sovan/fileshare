@@ -1,10 +1,13 @@
-import { BiTrash, BiPencil } from "react-icons/bi";
 import { useId, type ReactElement } from "react";
 import Button from "react-bootstrap/Button";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
-import { CgEyeAlt } from "react-icons/cg";
-import { getPageText, type PageConfig } from "../utils/pageConfig";
+import {
+  getPageText,
+  getPageVariant,
+  type PageConfig,
+} from "../utils/pageConfig";
+import { ConfiguredIcon } from "./configuredIcon";
 
 const withTooltip = (
   button: ReactElement,
@@ -44,12 +47,12 @@ export const TableOperation = ({
     <td style={{ width: "150px" }}>
       {withTooltip(
         <Button
-          variant="outline-danger"
+          variant={getPageVariant(pages, "deleteRowButtonVariant", "outline-danger")}
           aria-label={getPageText(pages, "deleteAriaLabel")}
           className="me-2"
           onClick={onDeleteClick}
         >
-          <BiTrash />
+          <ConfiguredIcon pages={pages} setting="deleteIcon" />
         </Button>,
         pages,
         "deleteTooltip",
@@ -57,12 +60,12 @@ export const TableOperation = ({
       )}
       {withTooltip(
         <Button
-          variant="outline-danger"
+          variant={getPageVariant(pages, "editRowButtonVariant", "outline-danger")}
           aria-label={getPageText(pages, "editAriaLabel")}
           className="me-2"
           onClick={onEditClick}
         >
-          <BiPencil />
+          <ConfiguredIcon pages={pages} setting="editIcon" />
         </Button>,
         pages,
         "editTooltip",
@@ -70,11 +73,11 @@ export const TableOperation = ({
       )}
       {withTooltip(
         <Button
-          variant="outline-danger"
+          variant={getPageVariant(pages, "viewRowButtonVariant", "outline-danger")}
           aria-label={getPageText(pages, "viewAriaLabel")}
           onClick={onViewClick}
         >
-          <CgEyeAlt />
+          <ConfiguredIcon pages={pages} setting="viewIcon" />
         </Button>,
         pages,
         "viewTooltip",

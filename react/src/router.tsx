@@ -7,28 +7,17 @@ const AuthenticatedList = () => {
     Boolean(localStorage.getItem("authToken")) &&
     Boolean(localStorage.getItem("_id"));
 
-  return hasAuthentication ? (
-    <List />
-  ) : (
-    <Navigate to="/user/login" replace />
-  );
+  return hasAuthentication ? <List /> : <Navigate to="/user/login" replace />;
 };
 
 const UnauthenticatedLogin = () => {
   const { one: collection } = useParams();
-  const hasAuthentication =
-    Boolean(localStorage.getItem("authToken")) &&
-    Boolean(localStorage.getItem("_id"));
 
   if (collection !== "user") {
     return <Navigate to="/user/login" replace />;
   }
 
-  return hasAuthentication ? (
-    <Navigate to={`/${collection}`} replace />
-  ) : (
-    <Login />
-  );
+  return <Login />;
 };
 
 export const Router = () => {

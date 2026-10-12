@@ -12,6 +12,12 @@ export const getPageText = (pages: unknown, key: string): string => {
   return typeof value === "string" ? value : "";
 };
 
+export const getPageVariant = (
+  pages: PageConfig,
+  key: string,
+  fallback: string,
+): string => getPageText(pages, key) || fallback;
+
 type ModalButtonAlignmentKey =
   | "addModalButtonAlignment"
   | "editModalButtonAlignment"

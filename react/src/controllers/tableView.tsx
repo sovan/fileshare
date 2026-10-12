@@ -1,11 +1,15 @@
 import { Button, Table } from "react-bootstrap";
-import { BsArrowDown, BsArrowUp, BsArrowDownUp } from "react-icons/bs";
 import TableOperation from "./tableOperation";
 import Pagination from "./pagination";
 import { DeleteModal } from "./deleteModal";
 import { ViewModal } from "./viewModal";
-import { getPageText, type PageConfig } from "../utils/pageConfig";
+import {
+  getPageText,
+  getPageVariant,
+  type PageConfig,
+} from "../utils/pageConfig";
 import { formatDateTime } from "../utils/dateTime";
+import { ConfiguredIcon } from "./configuredIcon";
 
 type TableRecord = {
   [key: string]: unknown;
@@ -81,14 +85,14 @@ const getAriaSort = (
   return sortOrder === "asc" ? "ascending" : "descending";
 };
 
-const getSortIcon = (isActiveSort: boolean, sortOrder: "asc" | "desc") => {
+const getSortIconSetting = (isActiveSort: boolean, sortOrder: "asc" | "desc") => {
   if (!isActiveSort) {
-    return <BsArrowDownUp className="text-muted" />;
+    return "sortUnsortedIcon";
   }
   if (sortOrder === "asc") {
-    return <BsArrowUp />;
+    return "sortAscendingIcon";
   }
-  return <BsArrowDown />;
+  return "sortDescendingIcon";
 };
 
 export const TableView = ({
@@ -136,7 +140,7 @@ export const TableView = ({
         >
           {isSortable ? (
             <Button
-              variant="link"
+              variant={getPageVariant(pages, "sortButtonVariant", "link")}
               className="p-0 text-decoration-none text-reset fw-semibold"
               onClick={() => onSort(key)}
             >
@@ -147,7 +151,11 @@ export const TableView = ({
                   aria-hidden="true"
                   style={{ lineHeight: "0.65" }}
                 >
-                  {getSortIcon(isActiveSort, sortOrder)}
+                  <ConfiguredIcon
+                    pages={pages}
+                    setting={getSortIconSetting(isActiveSort, sortOrder)}
+                    className={!isActiveSort ? "text-muted" : undefined}
+                  />
                 </span>
               )}
             </Button>

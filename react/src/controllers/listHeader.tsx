@@ -1,8 +1,12 @@
 import { Row, Col, Button, Form, InputGroup, Collapse } from "react-bootstrap";
 import { FormModal } from "./formModal";
-import { getPageText, type PageConfig } from "../utils/pageConfig";
+import {
+  getPageText,
+  getPageVariant,
+  type PageConfig,
+} from "../utils/pageConfig";
 import { useId, useState } from "react";
-import { BsFunnel, BsSearch } from "react-icons/bs";
+import { ConfiguredIcon } from "./configuredIcon";
 
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
@@ -81,7 +85,7 @@ export const ListHeader = ({
       : [];
   const addButton = (
     <Button
-      variant="primary"
+      variant={getPageVariant(pages, "addButtonVariant", "primary")}
       onClick={() => {
         clearViewRecord();
         setShowAdd(true);
@@ -112,12 +116,16 @@ export const ListHeader = ({
             aria-label={getPageText(pages, "listSearchPlaceholder")}
           />
           <Button
-            variant="outline-secondary"
+            variant={getPageVariant(pages, "listSearchButtonVariant", "outline-secondary")}
             onClick={onSearchSubmit}
             aria-label={getPageText(pages, "listSearchButton")}
             title={getPageText(pages, "listSearchButton")}
           >
-            <BsSearch aria-hidden="true" />
+            <ConfiguredIcon
+              pages={pages}
+              setting="listSearchIcon"
+              aria-hidden="true"
+            />
           </Button>
         </InputGroup>
       </Col>
@@ -125,7 +133,7 @@ export const ListHeader = ({
         {!isLoading && (
           <>
             <Button
-              variant="outline-secondary"
+              variant={getPageVariant(pages, "listFilterButtonVariant", "outline-secondary")}
               className="me-2"
               onClick={() => {
                 setShowFilters((current) => !current);
@@ -133,7 +141,12 @@ export const ListHeader = ({
               disabled={applyingFilters && disableFilterControlsWhileApplying}
               aria-expanded={showFilters}
             >
-              <BsFunnel className="me-1" aria-hidden="true" />
+              <ConfiguredIcon
+                pages={pages}
+                setting="listFilterIcon"
+                className="me-1"
+                aria-hidden="true"
+              />
               {getPageText(pages, "listFilterButton")}
             </Button>
             {pages.addButtonTooltip == null ? (
@@ -179,7 +192,7 @@ export const ListHeader = ({
             </Row>
             <div className="d-flex gap-2 justify-content-end">
               <Button
-                variant="outline-secondary"
+                variant={getPageVariant(pages, "listFilterClearButtonVariant", "outline-secondary")}
                 disabled={applyingFilters && disableFilterControlsWhileApplying}
                 onClick={() => {
                   void clearFilters();
@@ -188,7 +201,7 @@ export const ListHeader = ({
                 {getPageText(pages, "listFilterClearButton")}
               </Button>
               <Button
-                variant="primary"
+                variant={getPageVariant(pages, "listFilterApplyButtonVariant", "primary")}
                 disabled={applyingFilters && disableFilterControlsWhileApplying}
                 onClick={() => {
                   void applyFilters();

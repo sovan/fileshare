@@ -4,6 +4,7 @@ import { Loading } from "./loading";
 import {
   getModalButtonAlignmentClass,
   getPageText,
+  getPageVariant,
   type PageConfig,
 } from "../utils/pageConfig";
 import { formatDateTime } from "../utils/dateTime";
@@ -99,7 +100,10 @@ export const ViewModal = ({
           "viewModalButtonAlignment",
         )}
       >
-        <Button variant="secondary" onClick={() => setShow(false)}>
+        <Button
+          variant={getPageVariant(pages, "viewCloseButtonVariant", "secondary")}
+          onClick={() => setShow(false)}
+        >
           {getPageText(pages, "closeButton")}
         </Button>
       </Modal.Footer>

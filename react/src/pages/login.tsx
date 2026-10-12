@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, type RegisterOptions } from "react-hook-form";
-import { getPageText, isPageConfig, type PageConfig } from "../utils/pageConfig";
+import {
+  getPageText,
+  getPageVariant,
+  isPageConfig,
+  type PageConfig,
+} from "../utils/pageConfig";
 import { Loading } from "../controllers/loading";
 
 const HOSTNAME = "http://localhost:3000/";
@@ -151,6 +156,15 @@ export const Login = () => {
         const loginConfig = await loadLoginConfig(collection);
         if (active) {
           setConfig(loginConfig);
+          if (
+            localStorage.getItem("authToken") &&
+            localStorage.getItem("_id")
+          ) {
+            const redirectPath =
+              getPageText(loginConfig.pages, "loginRedirectPath") ||
+              `/${collection}`;
+            void navigate(redirectPath, { replace: true });
+          }
         }
       } catch (error) {
         if (active) {
@@ -166,7 +180,7 @@ export const Login = () => {
     return () => {
       active = false;
     };
-  }, [collection]);
+  }, [collection, navigate]);
 
   const submitLogin = async (credentials: Record<string, string>) => {
     if (!collection || !config) return;
@@ -262,6 +276,7 @@ export const Login = () => {
         <div className={`d-flex ${alignmentClasses.buttons}`}>
           <Button
             type="submit"
+            variant={getPageVariant(pages, "loginSubmitButtonVariant", "primary")}
             disabled={submitting || loginFields.length === 0}
           >
             {submitting && (
