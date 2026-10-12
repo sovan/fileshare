@@ -23,6 +23,46 @@ type LoginConfig = {
   pages: PageConfig;
 };
 
+const loginConfigRequests = new Map<string, Promise<LoginConfig>>();
+
+const loadLoginConfig = (collection: string): Promise<LoginConfig> => {
+  const existingRequest = loginConfigRequests.get(collection);
+  if (existingRequest) return existingRequest;
+
+  const request = (async () => {
+    const response = await fetch(`${HOSTNAME}${collection}/schema`);
+    const data: unknown = await response.json();
+    if (!response.ok) {
+      throw new Error(getErrorMessage(data, "Unable to load login form."));
+    }
+    if (
+      typeof data !== "object" ||
+      data === null ||
+      Array.isArray(data) ||
+      !("schema" in data) ||
+      typeof data.schema !== "object" ||
+      data.schema === null ||
+      Array.isArray(data.schema) ||
+      !("pages" in data) ||
+      !isPageConfig(data.pages)
+    ) {
+      throw new Error("Invalid login form configuration.");
+    }
+    return {
+      schema: data.schema as Record<string, SchemaField>,
+      pages: data.pages,
+    };
+  })();
+
+  loginConfigRequests.set(collection, request);
+  void request.catch(() => {
+    if (loginConfigRequests.get(collection) === request) {
+      loginConfigRequests.delete(collection);
+    }
+  });
+  return request;
+};
+
 const getErrorMessage = (value: unknown, fallback: string): string =>
   typeof value === "object" &&
   value !== null &&
@@ -107,29 +147,10 @@ export const Login = () => {
       setLoadingSchema(true);
       setSchemaError("");
       try {
-        const response = await fetch(`${HOSTNAME}${collection}/schema`);
-        const data: unknown = await response.json();
-        if (!response.ok) {
-          throw new Error(getErrorMessage(data, "Unable to load login form."));
-        }
-        if (
-          typeof data !== "object" ||
-          data === null ||
-          Array.isArray(data) ||
-          !("schema" in data) ||
-          typeof data.schema !== "object" ||
-          data.schema === null ||
-          Array.isArray(data.schema) ||
-          !("pages" in data) ||
-          !isPageConfig(data.pages)
-        ) {
-          throw new Error("Invalid login form configuration.");
-        }
+        if (!collection) throw new Error("Login collection is missing.");
+        const loginConfig = await loadLoginConfig(collection);
         if (active) {
-          setConfig({
-            schema: data.schema as Record<string, SchemaField>,
-            pages: data.pages,
-          });
+          setConfig(loginConfig);
         }
       } catch (error) {
         if (active) {

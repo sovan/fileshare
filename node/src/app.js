@@ -11,9 +11,17 @@ import {
   update,
 } from "#controller/app.controller.js";
 import cors from "cors";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 await connectDB();
 const app = express();
+const sourceDirectory = path.dirname(fileURLToPath(import.meta.url));
+const readAppConfig = () =>
+  JSON.parse(
+    fs.readFileSync(new URL("./config/config.json", import.meta.url), "utf8"),
+  );
 app.disable("x-powered-by");
 const corsOptions = {
   origin: "http://localhost:5172",
@@ -21,6 +29,30 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express.json());
+
+app.get("/config", (req, res) => {
+  const appConfig = readAppConfig();
+  res.json({
+    stylesheets: appConfig.stylesheets.map((stylesheet) => stylesheet.href),
+  });
+});
+app.get("/styles/:stylesheet", (req, res, next) => {
+  const appConfig = readAppConfig();
+  const stylesheet = appConfig.stylesheets.find(
+    (item) => item.href === `/styles/${req.params.stylesheet}`,
+  );
+  if (!stylesheet) {
+    return res.status(404).json({ error: "Stylesheet not configured." });
+  }
+  const stylesheetPath = path.resolve(
+    sourceDirectory,
+    "style",
+    path.basename(stylesheet.href),
+  );
+  res.sendFile(stylesheetPath, (error) => {
+    if (error) next(error);
+  });
+});
 
 //app.get("/:one", all);
 app.post("/:one/login", login);
