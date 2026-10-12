@@ -68,6 +68,9 @@ const useAPI = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [applyingFilters, setApplyingFilters] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [schema, setSchema] = useState({});
   const [pages, setPages] = useState<PageConfig>({});
@@ -128,10 +131,17 @@ const useAPI = () => {
     }, 3000);
   };
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback((filterOverride?: Record<string, string>) => {
     const query = new URLSearchParams({ page: String(currentPage) });
     if (search.trim()) {
       query.set("search", search.trim());
+    }
+    const filtersToApply = filterOverride ?? filters;
+    const activeFilters = Object.fromEntries(
+      Object.entries(filtersToApply).filter(([, value]) => value.trim()),
+    );
+    if (Object.keys(activeFilters).length > 0) {
+      query.set("filters", JSON.stringify(activeFilters));
     }
     const userId = localStorage.getItem("_id");
     if (localStorage.getItem("authToken") && userId) {
@@ -181,13 +191,22 @@ const useAPI = () => {
       } finally {
         if (requestId === fetchDataRequestId.current) {
           setLoadingList(false);
+          setApplyingFilters(false);
           fetchDataRequest.current = null;
         }
       }
     })();
     fetchDataRequest.current = { key: requestKey, promise: request };
     return request;
-  }, [currentPage, param.one, redirectOnUnauthorized, search, sortBy, sortOrder]);
+  }, [
+    currentPage,
+    filters,
+    param.one,
+    redirectOnUnauthorized,
+    search,
+    sortBy,
+    sortOrder,
+  ]);
 
   const updateSearch = useCallback((value: string) => {
     setSearchInput(value);
@@ -196,6 +215,23 @@ const useAPI = () => {
     setCurrentPage(1);
     setSearch(searchInput.trim());
   }, [searchInput]);
+  const updateFilter = useCallback((field: string, value: string) => {
+    setFilterValues((current) => ({ ...current, [field]: value }));
+  }, []);
+  const applyFilters = useCallback(async () => {
+    setCurrentPage(1);
+    setApplyingFilters(true);
+    const nextFilters = { ...filterValues };
+    setFilters(nextFilters);
+    await fetchData(nextFilters);
+  }, [fetchData, filterValues]);
+  const clearFilters = useCallback(async () => {
+    setCurrentPage(1);
+    setApplyingFilters(true);
+    setFilterValues({});
+    setFilters({});
+    await fetchData({});
+  }, [fetchData]);
 
   const toggleSort = useCallback((field: string) => {
     setCurrentPage(1);
@@ -397,6 +433,11 @@ const useAPI = () => {
     search: searchInput,
     updateSearch,
     submitSearch,
+    filterValues,
+    updateFilter,
+    applyFilters,
+    clearFilters,
+    applyingFilters,
     serverError,
     viewRecord,
     loadingList,

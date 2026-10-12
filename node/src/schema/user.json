@@ -11,6 +11,7 @@
         "list",
         "edit",
         "sort",
+        "filter",
         "login"
       ],
       "type": "String",
@@ -38,7 +39,8 @@
         "update",
         "list",
         "edit",
-        "sort"
+        "sort",
+        "filter"
       ],
       "type": "String",
       "required": [
@@ -69,7 +71,8 @@
         "update",
         "list",
         "edit",
-        "sort"
+        "sort",
+        "filter"
       ],
       "type": "String",
       "required": [
@@ -198,6 +201,13 @@
     "listSearchPlaceholder": "Search users...",
     "listSearchButton": "Search",
     "listSearchDebounceMs": 1000,
+    "listFilterButton": "Filter",
+    "listFilterTitle": "Filter users",
+    "listFilterApplyButton": "Apply filters",
+    "listFilterApplyingButton": "Applying filters...",
+    "listFilterClearButton": "Clear filters",
+    "closeFilterOnAction": false,
+    "disableFilterControlsWhileApplying": true,
     "viewTitle": "View user",
     "dateTimeFormat": "MM/DD/YYYY hh:mm:ss A",
     "closeButton": "Close",

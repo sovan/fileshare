@@ -1,8 +1,9 @@
-import { Row, Col, Button, Form, InputGroup } from "react-bootstrap";
+import { Row, Col, Button, Form, InputGroup, Collapse } from "react-bootstrap";
 import { FormModal } from "./formModal";
 import { getPageText, type PageConfig } from "../utils/pageConfig";
-import { useId } from "react";
-import { BsSearch } from "react-icons/bs";
+import { useId, useState } from "react";
+import { BsFunnel, BsSearch } from "react-icons/bs";
+
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 
@@ -22,6 +23,19 @@ type ListHeaderProps = {
   search: string;
   onSearch: (value: string) => void;
   onSearchSubmit: () => void;
+  filterValues: Record<string, string>;
+  onFilterChange: (field: string, value: string) => void;
+  onFilterSubmit: () => Promise<void>;
+  onFilterClear: () => Promise<void>;
+  closeFilterOnAction: boolean;
+  applyingFilters: boolean;
+  disableFilterControlsWhileApplying: boolean;
+};
+
+type FilterField = {
+  name?: string;
+  type?: string;
+  operation?: string[];
 };
 
 export const ListHeader = ({
@@ -40,8 +54,31 @@ export const ListHeader = ({
   search,
   onSearch,
   onSearchSubmit,
+  filterValues,
+  onFilterChange,
+  onFilterSubmit,
+  onFilterClear,
+  closeFilterOnAction,
+  applyingFilters,
+  disableFilterControlsWhileApplying,
 }: ListHeaderProps) => {
   const addTooltipId = useId();
+  const [showFilters, setShowFilters] = useState(false);
+  const applyFilters = async () => {
+    await onFilterSubmit();
+    if (closeFilterOnAction) setShowFilters(false);
+  };
+  const clearFilters = async () => {
+    await onFilterClear();
+    if (closeFilterOnAction) setShowFilters(false);
+  };
+
+  const filterFields =
+    schema && typeof schema === "object" && !Array.isArray(schema)
+      ? Object.entries(schema as Record<string, FilterField>).filter(
+          ([, field]) => field.operation?.includes("filter"),
+        )
+      : [];
   const addButton = (
     <Button
       variant="primary"
@@ -85,21 +122,88 @@ export const ListHeader = ({
         </InputGroup>
       </Col>
       <Col className="text-end">
-        {!isLoading &&
-          (pages.addButtonTooltip == null ? (
-            addButton
-          ) : (
-            <OverlayTrigger
-              placement="top"
-              overlay={
-                <Tooltip id={addTooltipId}>
-                  {getPageText(pages, "addButtonTooltip")}
-                </Tooltip>
-              }
+        {!isLoading && (
+          <>
+            <Button
+              variant="outline-secondary"
+              className="me-2"
+              onClick={() => {
+                setShowFilters((current) => !current);
+              }}
+              disabled={applyingFilters && disableFilterControlsWhileApplying}
+              aria-expanded={showFilters}
             >
-              {addButton}
-            </OverlayTrigger>
-          ))}
+              <BsFunnel className="me-1" aria-hidden="true" />
+              {getPageText(pages, "listFilterButton")}
+            </Button>
+            {pages.addButtonTooltip == null ? (
+              addButton
+            ) : (
+              <OverlayTrigger
+                placement="top"
+                overlay={
+                  <Tooltip id={addTooltipId}>
+                    {getPageText(pages, "addButtonTooltip")}
+                  </Tooltip>
+                }
+              >
+                {addButton}
+              </OverlayTrigger>
+            )}
+          </>
+        )}
+      </Col>
+      <Col xs={12}>
+        <Collapse in={showFilters}>
+          <div className="border rounded p-3 mt-2">
+            <h5>{getPageText(pages, "listFilterTitle")}</h5>
+            <Row>
+              {filterFields.map(([key, field]) => (
+                <Col xs={12} md={4} key={key} className="mb-3">
+                  <Form.Label htmlFor={`filter-${key}`}>
+                    {field.name ?? key}
+                  </Form.Label>
+                  <Form.Control
+                    id={`filter-${key}`}
+                    type={field.type === "Date" ? "date" : "text"}
+                    value={filterValues[key] ?? ""}
+                    disabled={
+                      applyingFilters && disableFilterControlsWhileApplying
+                    }
+                    onChange={(event) =>
+                      onFilterChange(key, event.target.value)
+                    }
+                  />
+                </Col>
+              ))}
+            </Row>
+            <div className="d-flex gap-2 justify-content-end">
+              <Button
+                variant="outline-secondary"
+                disabled={applyingFilters && disableFilterControlsWhileApplying}
+                onClick={() => {
+                  void clearFilters();
+                }}
+              >
+                {getPageText(pages, "listFilterClearButton")}
+              </Button>
+              <Button
+                variant="primary"
+                disabled={applyingFilters && disableFilterControlsWhileApplying}
+                onClick={() => {
+                  void applyFilters();
+                }}
+              >
+                {getPageText(
+                  pages,
+                  applyingFilters
+                    ? "listFilterApplyingButton"
+                    : "listFilterApplyButton",
+                )}
+              </Button>
+            </div>
+          </div>
+        </Collapse>
       </Col>
       <FormModal
         setShow={setShowAdd}

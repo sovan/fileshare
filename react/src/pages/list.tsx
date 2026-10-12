@@ -35,6 +35,11 @@ export const List = () => {
     search,
     updateSearch,
     submitSearch,
+    filterValues,
+    updateFilter,
+    applyFilters,
+    clearFilters,
+    applyingFilters,
     schema,
     viewRecord,
     loadingList,
@@ -79,6 +84,15 @@ export const List = () => {
             search={search}
             onSearch={updateSearch}
             onSearchSubmit={submitSearch}
+            filterValues={filterValues}
+            onFilterChange={updateFilter}
+            onFilterSubmit={applyFilters}
+            onFilterClear={clearFilters}
+            closeFilterOnAction={pages.closeFilterOnAction !== false}
+            applyingFilters={applyingFilters}
+            disableFilterControlsWhileApplying={
+              pages.disableFilterControlsWhileApplying !== false
+            }
           />
           {loadingList ? (
             <Loading pages={pages} centered large />
