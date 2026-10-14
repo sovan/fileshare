@@ -154,10 +154,7 @@ const FormFieldInput = ({
   </Form.Group>
 );
 
-const getFieldServerError = (
-  serverError: unknown,
-  key: string,
-): unknown => {
+const getFieldServerError = (serverError: unknown, key: string): unknown => {
   if (
     typeof serverError === "object" &&
     serverError !== null &&
@@ -258,7 +255,11 @@ export const FormModal = ({
           )}
         >
           <Button
-            variant={getPageVariant(pages, "formCancelButtonVariant", "secondary")}
+            variant={getPageVariant(
+              pages,
+              "formCancelButtonVariant",
+              "secondary",
+            )}
             onClick={() => setShow(false)}
             disabled={disabled || loadingRecord}
           >

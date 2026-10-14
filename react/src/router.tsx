@@ -28,6 +28,7 @@ export const Router = () => {
       <Route path="/contact" element={<h1>Contact Page</h1>} />
       <Route path="/:one/login" element={<UnauthenticatedLogin />} />
       <Route path="/:one" element={<AuthenticatedList />} />
+      <Route path="/project/:one" element={<AuthenticatedList />} />
     </Routes>
   );
 };

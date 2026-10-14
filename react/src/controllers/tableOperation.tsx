@@ -3,17 +3,10 @@ import Button from "react-bootstrap/Button";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import type { PageConfig } from "../utils/pageConfig";
-import {
-  getTableButtons,
-  type TableButtonConfig,
-} from "../utils/tableActions";
+import { getTableButtons, type TableButtonConfig } from "../utils/tableActions";
 import { ConfiguredIcon } from "./configuredIcon";
 
-const withTooltip = (
-  button: ReactElement,
-  label: string,
-  id: string,
-) =>
+const withTooltip = (button: ReactElement, label: string, id: string) =>
   label ? (
     <OverlayTrigger
       placement="top"
@@ -71,6 +64,9 @@ export const TableOperation = ({
         {buttons.map((button, index) => {
           const tooltip = button.tooltip ?? "";
           const ariaLabel = button.ariaLabel ?? button.label;
+          const showLabel = button.icon
+            ? (button.showLabel ?? button.showLable ?? false)
+            : true;
           return withTooltip(
             <Button
               key={button.id}
@@ -89,7 +85,7 @@ export const TableOperation = ({
                   aria-hidden="true"
                 />
               )}
-              {button.type === "api" && button.label && (
+              {showLabel && (
                 <span className={button.icon ? "ms-1" : undefined}>
                   {button.label}
                 </span>

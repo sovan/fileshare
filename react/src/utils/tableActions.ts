@@ -1,5 +1,5 @@
-export type TableActionType = "delete" | "edit" | "view" | "api";
-export type TableActionMethod = "POST" | "PUT" | "PATCH" | "DELETE";
+export type TableActionType = "delete" | "edit" | "view" | "api" | "navigate";
+export type TableActionMethod = "POST" | "PUT" | "PATCH" | "DELETE" | "GET";
 
 export type TableButtonConfig = {
   id: string;
@@ -9,51 +9,40 @@ export type TableButtonConfig = {
   variant?: string;
   ariaLabel?: string;
   tooltip?: string;
+  showLabel?: boolean;
+  showLable?: boolean;
   endpoint?: string;
   method?: TableActionMethod;
   successMessage?: string;
 };
 
-const actionTypes: TableActionType[] = ["delete", "edit", "view", "api"];
-const actionMethods: TableActionMethod[] = ["POST", "PUT", "PATCH", "DELETE"];
+const actionMethods: TableActionMethod[] = [
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "GET",
+];
 
 export const getTableButtons = (value: unknown): TableButtonConfig[] => {
   if (!Array.isArray(value)) return [];
 
-  const buttons = value.map((item, index) => {
+  const buttons = value.map((item) => {
     if (
-      typeof item !== "object" ||
-      item === null ||
-      Array.isArray(item) ||
-      !("id" in item) ||
-      typeof item.id !== "string" ||
-      !item.id.trim() ||
-      !("type" in item) ||
-      typeof item.type !== "string" ||
-      !actionTypes.includes(item.type as TableActionType) ||
-      !("label" in item) ||
-      typeof item.label !== "string" ||
-      (item.icon !== undefined && typeof item.icon !== "string") ||
-      (item.variant !== undefined && typeof item.variant !== "string") ||
-      (item.ariaLabel !== undefined && typeof item.ariaLabel !== "string") ||
-      (item.tooltip !== undefined && typeof item.tooltip !== "string") ||
-      (item.endpoint !== undefined && typeof item.endpoint !== "string") ||
-      (item.method !== undefined &&
-        (typeof item.method !== "string" ||
-          !actionMethods.includes(item.method as TableActionMethod))) ||
-      (item.successMessage !== undefined &&
-        typeof item.successMessage !== "string")
-    ) {
-      throw new Error(`Invalid table button configuration at index ${index}.`);
-    }
-    if (
-      item.type === "api" &&
-      (!item.endpoint ||
-        !item.method ||
-        !actionMethods.includes(item.method as TableActionMethod))
+      (item.type === "api" || item.type === "navigate") &&
+      (!item.endpoint || typeof item.endpoint !== "string")
     ) {
       throw new Error(
-        `API table button "${item.id}" requires an endpoint and valid method.`,
+        `Table button "${item.id}" of type "${item.type}" requires an endpoint string.`,
+      );
+    }
+
+    if (
+      item.type === "api" &&
+      (!item.method || !actionMethods.includes(item.method as TableActionMethod))
+    ) {
+      throw new Error(
+        `API table button "${item.id}" requires a valid method.`,
       );
     }
 

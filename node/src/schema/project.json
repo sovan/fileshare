@@ -32,6 +32,38 @@
         "Project name cannot exceed {MAXLENGTH} characters."
       ]
     },
+    "url": {
+      "name": "URL",
+      "inputType": "text",
+      "placeHolder": "Enter project URL",
+      "operation": [
+        "add",
+        "view",
+        "update",
+        "list",
+        "edit",
+        "sort",
+        "filter"
+      ],
+      "type": "String",
+      "trim": true,
+      "required": [
+        true,
+        "URL is required."
+      ],
+      "match": [
+        "URL",
+        "Please enter a valid URL."
+      ],
+      "minLength": [
+        5,
+        "URL must be at least {MINLENGTH} characters."
+      ],
+      "maxLength": [
+        255,
+        "URL cannot exceed {MAXLENGTH} characters."
+      ]
+    },
     "createdBy": {
       "name": "Created by",
       "type": "String",
@@ -68,6 +100,31 @@
       ]
     }
   },
+  "uniqueIndex": [
+    {
+      "index": {
+        "url": 1
+      },
+      "error": {
+        "show": [
+          "url"
+        ],
+        "msg": "URL is already taken"
+      }
+    },
+    {
+      "index": {
+        "projectName": 1,
+        "createdBy": 1
+      },
+      "error": {
+        "show": [
+          "projectName"
+        ],
+        "msg": "Project name should be unique"
+      }
+    }
+  ],
   "pages": {
     "heading": "Project management",
     "addButton": "Add project",
@@ -122,11 +179,24 @@
       {
         "id": "view",
         "type": "view",
+        "showLabel": true,
         "label": "View",
         "tooltip": "View project",
         "ariaLabel": "View project",
         "icon": "CgEyeAlt",
         "variant": "outline-danger"
+      },
+      {
+        "id": "go-to",
+        "type": "navigate",
+        "showLabel": true,
+        "label": "Go to project",
+        "tooltip": "Go to project",
+        "ariaLabel": "Go to project",
+        "icon": "BsArrowRightCircleFill",
+        "variant": "primary",
+        "endpoint": "/project/[_id]",
+        "method": "GET"
       }
     ],
     "deleteCancelButtonVariant": "secondary",

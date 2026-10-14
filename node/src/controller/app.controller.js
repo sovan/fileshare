@@ -24,21 +24,23 @@ export const list = async (req, res) => {
     if (!authenticatedUser) return;
     filter.createdBy = String(authenticatedUser._id);
   }
-  const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const search =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
   if (search) {
     if (search.length > 100) {
       const error = new Error("Search text cannot exceed 100 characters.");
       error.status = 400;
       throw error;
     }
-    const searchFields = Object.entries(mongooseObject[collection].props)
-      .filter(
-        ([key, field]) =>
-          columns[key] === 1 &&
-          (field.type === "String" || field.type === "Date") &&
-          key !== "password" &&
-          key !== "authToken",
-      );
+    const searchFields = Object.entries(
+      mongooseObject[collection].props,
+    ).filter(
+      ([key, field]) =>
+        columns[key] === 1 &&
+        (field.type === "String" || field.type === "Date") &&
+        key !== "password" &&
+        key !== "authToken",
+    );
     const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (searchFields.length > 0) {
       filter.$and = [
@@ -170,7 +172,11 @@ export const view = async (req, res) => {
   const { columns } = createSchema(collection, "view");
   const condition = await getRecordCondition(req, res, collection, _id);
   if (!condition) return;
-  const record = await findOneData(mongooseObject[collection], condition, columns);
+  const record = await findOneData(
+    mongooseObject[collection],
+    condition,
+    columns,
+  );
   if (record instanceof Error) throw record;
   if (!record) {
     responseData(res, record);
@@ -211,13 +217,18 @@ export const edit = async (req, res) => {
   const { columns } = createSchema(collection, "edit");
   const condition = await getRecordCondition(req, res, collection, _id);
   if (!condition) return;
-  const edit = await findOneData(mongooseObject[collection], condition, columns);
+  const edit = await findOneData(
+    mongooseObject[collection],
+    condition,
+    columns,
+  );
   responseData(res, edit);
 };
 
 export const insert = async (req, res) => {
   const collection = req.params.one;
-  createSchema(collection);
+  const { uniqueIndex } = createSchema(collection);
+
   const schema = mongooseObject[collection].props;
   const data = { ...req.body };
   delete data.createdBy;
@@ -228,7 +239,11 @@ export const insert = async (req, res) => {
     if (!user) return;
     data.createdBy = String(user._id);
   }
-  const insert = await insertData(mongooseObject[collection], data);
+  const insert = await insertData(
+    mongooseObject[collection],
+    data,
+    uniqueIndex,
+  );
   insert?._id ? res.status(200) : res.status(400);
   responseData(res, insert);
 };
@@ -244,12 +259,12 @@ export const remove = async (req, res) => {
 export const update = async (req, res) => {
   const collection = req.params.one;
   const _id = req.params.two;
-  createSchema(collection);
+  const { uniqueIndex } = createSchema(collection);
   const schema = mongooseObject[collection].props;
   const data = { ...req.body };
+
   delete data.createdBy;
-  delete data.updatedBy;
-  delete data.updateBy;
+
   const condition = await getRecordCondition(req, res, collection, _id);
   if (!condition) return;
   if (schema.updatedBy) {
@@ -257,10 +272,12 @@ export const update = async (req, res) => {
     if (!user) return;
     data.updatedBy = String(user._id);
   }
+
   const update = await findAndUpdateData(
     mongooseObject[collection],
     condition,
     data,
+    uniqueIndex,
   );
   res.status(update?._id ? 200 : 400);
   responseData(res, update);
@@ -345,7 +362,7 @@ export const login = async (req, res) => {
 
 const createSchema = (collection, type) => {
   if (!mongooseObject[collection]) {
-    const { schema, pages } = createSchemaFromTextFile(collection);
+    const { schema, pages, uniqueIndex } = createSchemaFromTextFile(collection);
     if (!schema || typeof schema !== "object" || Array.isArray(schema)) {
       const error = new Error(
         `Schema for collection "${collection}" was not found or is invalid.`,
@@ -355,13 +372,19 @@ const createSchema = (collection, type) => {
     }
 
     const mongooseSchema = mongoose.Schema(schema, { timestamps: true });
+    if (uniqueIndex) {
+      for (const index of uniqueIndex ?? []) {
+        mongooseSchema.index(index?.index, { unique: true });
+      }
+    }
     mongooseObject[collection] = {
       schema: mongooseSchema.plugin(uniqueValidator, {
         message: "NOTUNIQUE",
       }),
       model: mongoose.model(collection, mongooseSchema),
       props: schema,
-      pages: pages,
+      pages,
+      uniqueIndex,
     };
   }
 
@@ -394,8 +417,13 @@ const createSchema = (collection, type) => {
           ),
         )
       : {};
-
-  return { columns, pageSize, sortableFields, defaultSort };
+  return {
+    columns,
+    pageSize,
+    sortableFields,
+    defaultSort,
+    uniqueIndex: mongooseObject[collection]?.uniqueIndex,
+  };
 };
 
 const generateRandomText = (length) =>

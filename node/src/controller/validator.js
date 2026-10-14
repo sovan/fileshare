@@ -1,27 +1,66 @@
 import fs from "node:fs";
 
-export const validatorExtract = (error, schema = {}) => {
-  const validationErrors = error.errors;
+export const validatorExtracts = (error, schema = {}, uniqueIndex = []) => {
+  const validationErrors =
+    error?.errors && typeof error.errors === "object" ? error.errors : {};
+  const configuredUniqueIndexes = Array.isArray(uniqueIndex) ? uniqueIndex : [];
+
+  console.log("start----------------------------");
+  console.log(validationErrors);
+  console.log(configuredUniqueIndexes);
+  console.log("end----------------------------");
+};
+
+export const validatorExtract = (error, schema = {}, uniqueIndex = []) => {
+  const validationErrors =
+    error?.errors && typeof error.errors === "object" ? error.errors : {};
+  const configuredUniqueIndexes = Array.isArray(uniqueIndex) ? uniqueIndex : [];
+
+  console.log("start----------------------------");
+  console.log(validationErrors);
+  console.log(configuredUniqueIndexes);
+  console.log(error?.code);
 
   const errors = {};
   for (const [key, validationError] of Object.entries(validationErrors)) {
+    console.log(JSON.stringify(configuredUniqueIndexes));
+
     if (validationError?.message === "NOTUNIQUE") {
-      errors[key] = schema[key]?.unique?.[1] ?? "This value already exists.";
+      const find = configuredUniqueIndexes.find(
+        (eachIndex) =>
+          Array.isArray(eachIndex?.error?.show) &&
+          eachIndex.error.show.includes(key),
+      );
+      errors[key] =
+        schema[key]?.unique?.[1] ??
+        find?.error?.msg ??
+        "This value already exists.";
     } else {
       errors[key] = validationError?.message ?? String(validationError);
     }
   }
 
   if (error?.code === 11000) {
+    console.log(JSON.stringify(configuredUniqueIndexes));
+
     const duplicateFields =
       error.keyValue && typeof error.keyValue === "object"
         ? Object.keys(error.keyValue)
         : Object.keys(error.keyPattern ?? {});
+    console.log(JSON.stringify(duplicateFields));
     for (const key of duplicateFields) {
-      errors[key] = schema[key]?.unique?.[1] ?? "This value already exists.";
+      const index = configuredUniqueIndexes.find(
+        (eachIndex) =>
+          Array.isArray(eachIndex?.error?.show) &&
+          eachIndex.error.show.includes(key),
+      );
+      errors[key] =
+        schema[key]?.unique?.[1] ??
+        index?.error?.msg ??
+        "This value already exists.";
     }
   }
-
+  console.log("end----------------------------");
   if (Object.keys(errors).length > 0) return errors;
 
   return {
@@ -48,11 +87,14 @@ export const createSchemaFromTextFile = (collection) => {
   const dataObject = JSON.parse(data);
   const schema = dataObject?.schema;
   const pages = dataObject?.pages;
+  const uniqueIndex = dataObject?.uniqueIndex || undefined;
   if (schema == null) {
     return { schema: null, pages, rawSchema: schema };
   }
   if (typeof schema !== "object" || Array.isArray(schema)) {
-    throw new Error(`Invalid schema definition for collection "${collection}".`);
+    throw new Error(
+      `Invalid schema definition for collection "${collection}".`,
+    );
   }
 
   const keys = Object.keys(schema);
@@ -71,6 +113,9 @@ export const createSchemaFromTextFile = (collection) => {
         case "PASSWORD":
           schema[key].match[0] =
             /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+          break;
+        case "URL":
+          schema[key].match[0] = /^[a-z\/]+$/;
           break;
         default:
           break;
@@ -94,6 +139,7 @@ export const createSchemaFromTextFile = (collection) => {
   return {
     schema,
     pages,
+    uniqueIndex,
     rawSchema: dataObject?.schema,
   };
 };

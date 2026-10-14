@@ -137,78 +137,81 @@ const useAPI = () => {
     }, 3000);
   };
 
-  const fetchData = useCallback((filterOverride?: Record<string, string>) => {
-    const query = new URLSearchParams({ page: String(currentPage) });
-    if (search.trim()) {
-      query.set("search", search.trim());
-    }
-    const filtersToApply = filterOverride ?? filters;
-    const activeFilters = Object.fromEntries(
-      Object.entries(filtersToApply).filter(([, value]) => value.trim()),
-    );
-    if (Object.keys(activeFilters).length > 0) {
-      query.set("filters", JSON.stringify(activeFilters));
-    }
-    if (sortBy) {
-      query.set("sortBy", sortBy);
-      query.set("sortOrder", sortOrder);
-    }
-    const requestKey = `${param.one}/list?${query}`;
-    if (fetchDataRequest.current?.key === requestKey) {
-      return fetchDataRequest.current.promise;
-    }
+  const fetchData = useCallback(
+    (filterOverride?: Record<string, string>) => {
+      const query = new URLSearchParams({ page: String(currentPage) });
+      if (search.trim()) {
+        query.set("search", search.trim());
+      }
+      const filtersToApply = filterOverride ?? filters;
+      const activeFilters = Object.fromEntries(
+        Object.entries(filtersToApply).filter(([, value]) => value.trim()),
+      );
+      if (Object.keys(activeFilters).length > 0) {
+        query.set("filters", JSON.stringify(activeFilters));
+      }
+      if (sortBy) {
+        query.set("sortBy", sortBy);
+        query.set("sortOrder", sortOrder);
+      }
+      const requestKey = `${param.one}/list?${query}`;
+      if (fetchDataRequest.current?.key === requestKey) {
+        return fetchDataRequest.current.promise;
+      }
 
-    const requestId = ++fetchDataRequestId.current;
-    setListError(undefined);
-    setLoadingList(true);
-    const request = (async () => {
-      try {
-        const response = await fetch(`${HOSTNAME}${requestKey}`, {
-          headers: {
-            ...getAuthHeaders(),
-          },
-        });
-        if (redirectOnUnauthorized(response)) return;
-        const data: unknown = await response.json();
-        const fallback =
-          getPageText(pagesRef.current, "loadRecordsError") ||
-          "Unable to load records.";
-        if (!response.ok) {
-          throw new Error(getApiErrorMessage(data, fallback));
-        }
-        if (!isListResponse(data)) {
-          throw new Error(fallback);
-        }
-        if (requestId === fetchDataRequestId.current) {
-          setRecords(data.records);
-          setTotalPages(data.totalPages);
-          if (currentPage > data.totalPages) {
-            setCurrentPage(data.totalPages);
+      const requestId = ++fetchDataRequestId.current;
+      setListError(undefined);
+      setLoadingList(true);
+      const request = (async () => {
+        try {
+          const response = await fetch(`${HOSTNAME}${requestKey}`, {
+            headers: {
+              ...getAuthHeaders(),
+            },
+          });
+          if (redirectOnUnauthorized(response)) return;
+          const data: unknown = await response.json();
+          const fallback =
+            getPageText(pagesRef.current, "loadRecordsError") ||
+            "Unable to load records.";
+          if (!response.ok) {
+            throw new Error(getApiErrorMessage(data, fallback));
+          }
+          if (!isListResponse(data)) {
+            throw new Error(fallback);
+          }
+          if (requestId === fetchDataRequestId.current) {
+            setRecords(data.records);
+            setTotalPages(data.totalPages);
+            if (currentPage > data.totalPages) {
+              setCurrentPage(data.totalPages);
+            }
+          }
+        } catch (err) {
+          if (requestId === fetchDataRequestId.current) {
+            setListError(err instanceof Error ? err.message : String(err));
+          }
+        } finally {
+          if (requestId === fetchDataRequestId.current) {
+            setLoadingList(false);
+            setApplyingFilters(false);
+            fetchDataRequest.current = null;
           }
         }
-      } catch (err) {
-        if (requestId === fetchDataRequestId.current) {
-          setListError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (requestId === fetchDataRequestId.current) {
-          setLoadingList(false);
-          setApplyingFilters(false);
-          fetchDataRequest.current = null;
-        }
-      }
-    })();
-    fetchDataRequest.current = { key: requestKey, promise: request };
-    return request;
-  }, [
-    currentPage,
-    filters,
-    param.one,
-    redirectOnUnauthorized,
-    search,
-    sortBy,
-    sortOrder,
-  ]);
+      })();
+      fetchDataRequest.current = { key: requestKey, promise: request };
+      return request;
+    },
+    [
+      currentPage,
+      filters,
+      param.one,
+      redirectOnUnauthorized,
+      search,
+      sortBy,
+      sortOrder,
+    ],
+  );
 
   const updateSearch = useCallback((value: string) => {
     setSearchInput(value);
@@ -235,16 +238,19 @@ const useAPI = () => {
     await fetchData({});
   }, [fetchData]);
 
-  const toggleSort = useCallback((field: string) => {
-    setCurrentPage(1);
-    setSortOrder((currentOrder) => {
-      if (sortBy === field) {
-        return currentOrder === "asc" ? "desc" : "asc";
-      }
-      return "asc";
-    });
-    setSortBy(field);
-  }, [sortBy]);
+  const toggleSort = useCallback(
+    (field: string) => {
+      setCurrentPage(1);
+      setSortOrder((currentOrder) => {
+        if (sortBy === field) {
+          return currentOrder === "asc" ? "desc" : "asc";
+        }
+        return "asc";
+      });
+      setSortBy(field);
+    },
+    [sortBy],
+  );
 
   const submitRecord = async (
     data: Record<string, unknown>,
@@ -360,10 +366,7 @@ const useAPI = () => {
             typeof res.error === "string"
               ? res.error
               : getPageText(pagesRef.current, "invalidUrl");
-          createAlert(
-            "danger",
-            errorMessage,
-          );
+          createAlert("danger", errorMessage);
         }
         return;
       }
@@ -414,63 +417,15 @@ const useAPI = () => {
     action: TableButtonConfig,
     record: ListRecord,
   ) => {
-    try {
-      const endpoint = action.endpoint?.replace(
-        /\{([^{}]+)\}/g,
-        (_match, field: string) => {
-          if (!(field in record) || record[field] == null) {
-            throw new Error(`Missing "${field}" for action "${action.label}".`);
-          }
-          return encodeURIComponent(String(record[field]));
-        },
-      );
-      if (!endpoint || !endpoint.startsWith("/") || endpoint.startsWith("//")) {
-        throw new Error(
-          `Action "${action.label}" must use a root-relative API endpoint.`,
-        );
-      }
-
-      const url = new URL(endpoint, HOSTNAME);
-      if (url.origin !== new URL(HOSTNAME).origin) {
-        throw new Error("Table actions must target this API server.");
-      }
-
-      const response = await fetch(url, {
-        method: action.method,
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(record),
-      });
-      if (redirectOnUnauthorized(response)) return;
-
-      const responseText = await response.text();
-      let responseData: unknown = responseText;
-      if (responseText) {
-        try {
-          responseData = JSON.parse(responseText);
-        } catch {
-          responseData = responseText;
+    console.log(record, action.type);
+    switch (action.type) {
+      case "navigate": {
+        if (action.endpoint) {
+          const path = action.endpoint.replaceAll("[_id]", record._id);
+          navigate(path);
         }
+        break;
       }
-      if (!response.ok) {
-        throw new Error(
-          getApiErrorMessage(
-            responseData,
-            responseText ||
-              `Action "${action.label}" failed (${response.status}).`,
-          ),
-        );
-      }
-
-      createAlert(
-        "success",
-        action.successMessage || `${action.label} completed successfully.`,
-      );
-      await fetchData();
-    } catch (error) {
-      createAlert("danger", error);
     }
   };
 

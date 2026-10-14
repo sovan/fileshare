@@ -20,10 +20,6 @@
         true,
         "Email address required."
       ],
-      "unique": [
-        true,
-        "Email already exist."
-      ],
       "match": [
         "EMAIL",
         "Please enter a valid email address."
@@ -172,6 +168,19 @@
       "type": "String"
     }
   },
+  "uniqueIndex": [
+    {
+      "index": {
+        "email": 1
+      },
+      "error": {
+        "show": [
+          "email"
+        ],
+        "msg": "Email already exist."
+      }
+    }
+  ],
   "pages": {
     "loginTitle": "Sign in",
     "loginSubmitButton": "Sign in",
